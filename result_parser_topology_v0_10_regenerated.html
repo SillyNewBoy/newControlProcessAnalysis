@@ -139,31 +139,16 @@
     }
 
     .layout {
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
-      gap: 18px;
+      display: block;
       padding: 18px;
     }
 
-    .sidebar,
     .main-card,
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-    }
-
-    .sidebar {
-      min-height: calc(100vh - 104px);
-      padding: 18px;
-    }
-
-    .sidebar-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
     }
 
     .sidebar h2,
@@ -173,40 +158,6 @@
       margin: 0;
     }
 
-    .history-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .history-item {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: #fafafa;
-      cursor: default;
-      overflow: hidden;
-    }
-
-    .history-item.active {
-      background: var(--primary-soft);
-      border-color: #bfdbfe;
-    }
-
-    .history-name {
-      font-size: 13px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .history-meta {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 4px;
-    }
 
     .empty {
       color: var(--muted);
@@ -487,14 +438,13 @@
 
     .detail-focus {
       display: grid;
-      grid-template-columns: minmax(760px, 1fr) minmax(320px, 390px);
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
       align-items: stretch;
-      min-height: 500px;
+      min-height: auto;
     }
 
     .flow-card,
-    .raw-card,
     .value-card {
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -516,13 +466,12 @@
       min-width: 0;
       display: grid;
       grid-template-rows: auto 1fr;
-      min-height: 500px;
+      min-height: 220px;
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
     }
 
     .value-head,
-    .flow-title,
-    .raw-title {
+    .flow-title {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -531,8 +480,7 @@
     }
 
     .value-head strong,
-    .flow-title strong,
-    .raw-title strong {
+    .flow-title strong {
       font-size: 14px;
     }
 
@@ -593,67 +541,43 @@
       border-color: var(--empty-node-border);
     }
 
-    .raw-card {
-      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
-    }
-
-    .raw-card summary {
-      cursor: pointer;
-      font-weight: 800;
-      font-size: 14px;
-      color: #0f172a;
-      list-style-position: inside;
-    }
-
-    .raw-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .raw-item {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 10px;
-      background: #fff;
-      min-width: 0;
-    }
-
-    .raw-item b {
-      display: block;
-      font-size: 12px;
-      color: #334155;
-      margin-bottom: 6px;
-    }
-
-    .raw-item span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.6;
-      max-height: 76px;
-      overflow: auto;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
     .flow-topology {
-      overflow: auto;
-      padding: 2px 2px 6px;
-      height: calc(100% - 34px);
-      min-height: 450px;
+      overflow: hidden;
+      padding: 0;
+      height: clamp(560px, 68vh, 760px);
+      min-height: 520px;
     }
 
     .topology-shell {
-      min-width: 760px;
-      min-height: 440px;
+      width: 100%;
       height: 100%;
       position: relative;
-      padding: 16px 18px;
+      padding: 0;
       border: 1px solid #dbeafe;
       border-radius: 18px;
-      background: rgba(248, 250, 252, 0.82);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(203, 213, 225, 0.28) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(203, 213, 225, 0.28) 1px, transparent 1px),
+        #fcfdff;
+      background-size: 24px 24px, 24px 24px, auto;
+    }
+
+    .flow-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1900px;
+      height: 860px;
+      transform-origin: top left;
+    }
+
+    .flow-grid {
+      position: relative;
+      z-index: 2;
+      display: block;
+      width: 1900px;
+      height: 860px;
     }
 
     .flow-edges {
@@ -661,167 +585,84 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      z-index: 6;
+      z-index: 4;
       pointer-events: none;
       overflow: visible;
     }
 
     .flow-edge {
       fill: none;
-      stroke: var(--edge);
-      stroke-width: 2.1;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .flow-edge.iteration {
-      stroke: #7c3aed;
-      stroke-dasharray: 6 5;
-      stroke-width: 2.2;
-    }
-
-    .flow-grid {
-      position: relative;
-      z-index: 2;
-      display: grid;
-      grid-template-columns: 86px minmax(390px, 1fr) 170px 86px;
-      gap: 16px;
-      align-items: center;
-      min-height: 405px;
-      height: 100%;
-    }
-
-    .entry-zone,
-    .exit-zone {
-      display: grid;
-      place-items: center;
-      height: 100%;
-      position: relative;
-      z-index: 8;
-    }
-
-    .middle-zone {
-      display: grid;
-      grid-template-rows: minmax(250px, 1fr) 96px;
-      gap: 14px;
-      height: 100%;
-      align-content: center;
-      position: relative;
-      z-index: 2;
+      stroke: #2f343b;
+      stroke-width: 3;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
     }
 
     .system-box {
-      position: relative;
+      position: absolute;
       z-index: 2;
-      border: 1px solid var(--module-border);
-      background: rgba(255, 255, 255, 0.90);
-      border-radius: 18px;
-      padding: 36px 12px 12px;
-      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+      border: 3px solid #2f343b;
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 10px;
+      box-shadow: none;
+      pointer-events: none;
     }
 
     .system-head {
       position: absolute;
-      z-index: 9;
-      left: 14px;
-      top: 10px;
-      right: 14px;
+      z-index: 3;
+      left: 24px;
+      top: 2px;
+      right: 24px;
       display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
+      align-items: center;
+      justify-content: center;
       pointer-events: none;
     }
 
     .system-head strong {
-      font-size: 13px;
-      color: #0f172a;
-      background: rgba(255, 255, 255, 0.76);
-      border-radius: 8px;
-      padding: 1px 4px;
+      font-size: 31px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #1f2937;
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 0;
+      padding: 0 8px;
     }
 
     .system-head span {
-      color: var(--muted);
-      font-size: 10px;
-      white-space: nowrap;
-      background: rgba(255, 255, 255, 0.76);
-      border-radius: 8px;
-      padding: 1px 4px;
+      display: none;
     }
 
-    .knowledge-system,
-    .task-system,
-    .slow-system {
-      overflow: visible;
-    }
-
-    .knowledge-layout {
-      display: grid;
-      grid-template-rows: auto auto auto;
-      gap: 16px;
-      align-items: start;
-      justify-items: center;
-      position: relative;
+    .node-slot {
+      position: absolute;
       z-index: 8;
-    }
-
-    .knowledge-row {
-      display: flex;
-      justify-content: center;
-      align-items: start;
-      gap: 24px;
-      width: 100%;
-    }
-
-    .knowledge-row.same-level {
-      gap: 20px;
-    }
-
-    .task-system {
-      min-height: 96px;
       display: grid;
       place-items: center;
-      padding-top: 34px;
-    }
-
-    .slow-system {
-      min-height: 356px;
-      align-self: center;
-    }
-
-    .slow-layout {
-      min-height: 298px;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      align-items: center;
-      justify-items: center;
-      gap: 42px;
-      padding-top: 6px;
-      position: relative;
-      z-index: 8;
     }
 
     .flow-node {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #f8fafc;
-      padding: 10px 9px;
+      width: 100%;
+      height: 100%;
+      border: 3px solid #2f343b;
+      border-radius: 34px;
+      background: #ffffff;
+      padding: 12px 14px;
       text-align: center;
-      min-height: 58px;
-      min-width: 96px;
-      max-width: 132px;
+      min-height: 0;
+      min-width: 0;
+      max-width: none;
       display: inline-flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      color: #334155;
+      gap: 6px;
+      color: #1f2937;
       cursor: pointer;
       position: relative;
       z-index: 8;
       transition: transform 0.15s ease, border 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+      box-shadow: none;
       font: inherit;
     }
 
@@ -844,16 +685,16 @@
     }
 
     .flow-node.has-value.is-neutral-value {
-      background: #f8fafc;
-      border-color: var(--line);
-      color: #334155;
+      background: #ffffff;
+      border-color: #2f343b;
+      color: #1f2937;
     }
 
     .flow-node.active {
       z-index: 10;
-      outline: 3px solid rgba(37, 99, 235, 0.22);
+      outline: 6px solid rgba(37, 99, 235, 0.12);
       border-color: var(--primary);
-      background: #eff6ff;
+      background: #ffffff;
       color: #1d4ed8;
     }
 
@@ -862,7 +703,7 @@
     }
 
     .flow-node.has-value.is-neutral-value.active {
-      background: #eff6ff;
+      background: #ffffff;
       color: #1d4ed8;
     }
 
@@ -873,54 +714,30 @@
     }
 
     .flow-node .node-label {
-      font-size: 12px;
-      font-weight: 850;
-      line-height: 1.25;
+      font-size: 28px;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: 0;
     }
 
     .flow-node small {
       display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       font-weight: 500;
       color: currentColor;
-      opacity: 0.75;
-      font-size: 10px;
-      line-height: 1.25;
+      opacity: 0.72;
+      font-size: 14px;
+      line-height: 1.1;
     }
 
     .flow-node em {
       font-style: normal;
       color: #b45309;
-      font-size: 10px;
-      line-height: 1.2;
-    }
-
-    .node-external {
-      min-width: 86px;
-      background: #eef2ff;
-      border-color: #c7d2fe;
-      color: #3730a3;
-    }
-
-    .node-result {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
-      color: #166534;
-      min-width: 86px;
-    }
-
-    .node-logic {
-      background: #f5f3ff;
-      border-color: #ddd6fe;
-      color: #5b21b6;
-      min-width: 118px;
-    }
-
-    .node-external.is-empty,
-    .node-result.is-empty,
-    .node-logic.is-empty {
-      background: var(--empty-node-bg);
-      border-color: var(--empty-node-border);
-      color: var(--empty-node-text);
+      font-size: 14px;
+      line-height: 1.1;
     }
 
     .column-panel {
@@ -1013,9 +830,6 @@
         min-height: 450px;
       }
 
-      .raw-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
     }
 
     @media (max-width: 980px) {
@@ -1028,24 +842,17 @@
       }
 
       .layout {
-        grid-template-columns: 1fr;
         padding: 14px;
       }
 
-      .sidebar {
-        min-height: auto;
-      }
-
       .intro-grid,
-      .stats,
-      .raw-grid {
+      .stats {
         grid-template-columns: 1fr;
       }
 
       .table-toolbar,
       .flow-title,
-      .value-head,
-      .raw-title {
+      .value-head {
         align-items: flex-start;
         flex-direction: column;
       }
@@ -1093,16 +900,6 @@
     </header>
 
     <main class="layout">
-      <aside class="sidebar">
-        <div class="sidebar-head">
-          <h2>历史导入文件</h2>
-          <button id="clearHistoryBtn" class="btn ghost" type="button">清空</button>
-        </div>
-        <div id="historyList" class="history-list">
-          <div class="empty">暂无导入记录。点击左上角“打开本地 Excel”导入文件。</div>
-        </div>
-      </aside>
-
       <section class="content">
         <div class="intro-grid">
           <div class="panel">
@@ -1205,10 +1002,6 @@
             </div>
           </div>
 
-          <details class="raw-card">
-            <summary>全量字段速览</summary>
-            <div id="rawGrid" class="raw-grid"></div>
-          </details>
         </div>
       </div>
     </div>
@@ -1256,7 +1049,7 @@
     const FLOW_EDGES = [
       { from: "query", to: "router", fromSide: "right", toSide: "left" },
       { from: "query", to: "taskFast", fromSide: "right", toSide: "left" },
-      { from: "router", to: "kagDirect", fromSide: "bottom", toSide: "top" },
+      { from: "router", to: "kagDirect", fromSide: "right", toSide: "left" },
       { from: "router", to: "websearch", fromSide: "bottom", toSide: "top" },
       { from: "websearch", to: "kagKnowledge", fromSide: "bottom", toSide: "top" },
       { from: "websearch", to: "pageKnowledge", fromSide: "bottom", toSide: "top" },
@@ -1265,6 +1058,65 @@
       { from: "taskFast", to: "unillm", fromSide: "right", toSide: "left" },
       { from: "domainMd", to: "unillm", fromSide: "bottom", toSide: "top" },
       { from: "unillm", to: "result", fromSide: "right", toSide: "left" }
+    ];
+
+    const TOPOLOGY_STAGE = { width: 1900, height: 860 };
+
+    const TOPOLOGY_GROUPS = {
+      knowledge: { x: 280, y: 74, w: 790, h: 560, label: "知识快系统", subtitle: "Knowledge Fast System" },
+      slow: { x: 1190, y: 74, w: 380, h: 560, label: "知识慢系统", subtitle: "Slow System" }
+    };
+
+    const TOPOLOGY_NODES = {
+      query: { x: 20, y: 260, w: 190, h: 96, className: "node-external" },
+      router: { x: 330, y: 260, w: 190, h: 96 },
+      kagDirect: { x: 660, y: 160, w: 190, h: 96 },
+      websearch: { x: 660, y: 360, w: 190, h: 96 },
+      kagKnowledge: { x: 500, y: 520, w: 190, h: 96 },
+      pageKnowledge: { x: 820, y: 520, w: 190, h: 96 },
+      taskFast: { x: 330, y: 690, w: 740, h: 96 },
+      unillm: { x: 1300, y: 160, w: 190, h: 96, className: "node-logic" },
+      domainMd: { x: 1300, y: 520, w: 190, h: 96 },
+      result: { x: 1680, y: 160, w: 190, h: 96, className: "node-result" }
+    };
+
+    const TOPOLOGY_POINTS = {
+      webDomainMerge: {
+        x: TOPOLOGY_NODES.unillm.x + TOPOLOGY_NODES.unillm.w / 2,
+        y: TOPOLOGY_NODES.websearch.y + TOPOLOGY_NODES.websearch.h / 2
+      },
+      slowEntry: {
+        x: TOPOLOGY_GROUPS.slow.x,
+        y: 316
+      }
+    };
+
+    const TOPOLOGY_EDGE_ROUTES = {
+      "query->router": { sides: ["right", "left"], steps: [["h", "toEnd"]] },
+      "query->taskFast": { sides: ["right", "left"], steps: [["h", 240], ["v", 738], ["h", "toEnd"]] },
+      "router->kagDirect": { sides: ["right", "left"], steps: [["h", 610], ["v", "toEnd"], ["h", "toEnd"]] },
+      "router->websearch": { sides: ["right", "left"], steps: [["h", 610], ["v", "toEnd"], ["h", "toEnd"]] },
+      "websearch->kagKnowledge": { sides: ["bottom", "top"], steps: [["v", 492], ["h", "toEnd"], ["v", "toEnd"]] },
+      "websearch->pageKnowledge": { sides: ["bottom", "top"], steps: [["v", 492], ["h", "toEnd"], ["v", "toEnd"]] },
+      "kagDirect->unillm": { sides: ["right", "left"], steps: [["h", "toEnd"]] },
+      "websearch->webDomainMerge": { sides: ["right", "center"], steps: [["h", "toEnd"]], markerEnd: false },
+      "taskFast->slowEntry": { sides: ["right", "center"], steps: [["h", 1120], ["v", "toEnd"], ["h", "toEnd"]] },
+      "domainMd->unillm": { sides: ["top", "bottom"], steps: [["v", "toEnd"]] },
+      "unillm->result": { sides: ["right", "left"], steps: [["h", "toEnd"]] }
+    };
+
+    const TOPOLOGY_DRAW_EDGES = [
+      ["query", "router"],
+      ["query", "taskFast"],
+      ["router", "kagDirect"],
+      ["router", "websearch"],
+      ["websearch", "kagKnowledge"],
+      ["websearch", "pageKnowledge"],
+      ["kagDirect", "unillm"],
+      ["websearch", "webDomainMerge"],
+      ["taskFast", "slowEntry"],
+      ["domainMd", "unillm"],
+      ["unillm", "result"]
     ];
 
     const state = {
@@ -1281,8 +1133,6 @@
     const els = {
       fileInput: document.getElementById("fileInput"),
       clearBtn: document.getElementById("clearBtn"),
-      clearHistoryBtn: document.getElementById("clearHistoryBtn"),
-      historyList: document.getElementById("historyList"),
       tableCard: document.getElementById("tableCard"),
       emptyCard: document.getElementById("emptyCard"),
       statsArea: document.getElementById("statsArea"),
@@ -1304,7 +1154,6 @@
       selectedNodeTitle: document.getElementById("selectedNodeTitle"),
       nodeValueContent: document.getElementById("nodeValueContent"),
       copyValueBtn: document.getElementById("copyValueBtn"),
-      rawGrid: document.getElementById("rawGrid"),
       toast: document.getElementById("toast")
     };
 
@@ -1379,35 +1228,6 @@
       showToast.timer = window.setTimeout(() => els.toast.classList.remove("show"), 2200);
     }
 
-    function getHistory() {
-      try {
-        return JSON.parse(localStorage.getItem("result_parser_history") || "[]");
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveHistory(item) {
-      const history = getHistory().filter(file => file.name !== item.name);
-      history.unshift(item);
-      localStorage.setItem("result_parser_history", JSON.stringify(history.slice(0, 20)));
-      renderHistory();
-    }
-
-    function renderHistory() {
-      const history = getHistory();
-      if (!history.length) {
-        els.historyList.innerHTML = '<div class="empty">暂无导入记录。点击左上角“打开本地 Excel”导入文件。</div>';
-        return;
-      }
-      els.historyList.innerHTML = history.map(item => `
-        <div class="history-item ${item.name === state.fileName ? "active" : ""}" title="${escapeHtml(item.name)}">
-          <div class="history-name">${escapeHtml(item.name)}</div>
-          <div class="history-meta">${escapeHtml(item.rows)} 行 · ${escapeHtml(item.time)}</div>
-        </div>
-      `).join("");
-    }
-
     function clearCurrentData() {
       state.fileName = "";
       state.headers = [];
@@ -1423,14 +1243,7 @@
       els.statsArea.classList.add("hidden");
       els.emptyCard.classList.remove("hidden");
       els.columnPanel.classList.remove("show");
-      renderHistory();
       showToast("已清空当前数据");
-    }
-
-    function clearHistory() {
-      localStorage.removeItem("result_parser_history");
-      renderHistory();
-      showToast("已清空历史导入文件名");
     }
 
     function validateExcelFile(file) {
@@ -1466,12 +1279,6 @@
           state.searchKeyword = "";
           state.columnFilters = {};
           els.searchInput.value = "";
-
-          saveHistory({
-            name: file.name,
-            rows: rows.length,
-            time: new Date().toLocaleString("zh-CN", { hour12: false })
-          });
 
           renderAll();
           showToast(`导入成功：${file.name}`);
@@ -1527,7 +1334,6 @@
       els.tableCard.classList.remove("hidden");
       els.statsArea.classList.remove("hidden");
       els.tableTitle.textContent = `解析结果：${state.fileName}`;
-      renderHistory();
       renderStats();
       renderTable();
       renderColumnPanel();
@@ -1653,10 +1459,8 @@
       els.detailMeta.textContent = `第 ${rowIndex + 1} 行 · ${state.fileName}`;
       renderFlow();
       renderNodeValue(FLOW_NODE_MAP.pageKnowledge);
-      renderRawGrid();
       els.detailModal.classList.add("show");
       els.detailModal.setAttribute("aria-hidden", "false");
-      window.setTimeout(drawFlowEdges, 0);
     }
 
     function closeDetail() {
@@ -1685,58 +1489,34 @@
       </button>`;
     }
 
+    function groupMarkup(groupId) {
+      const group = TOPOLOGY_GROUPS[groupId];
+      return `<section class="system-box" data-group="${groupId}" style="left:${group.x}px; top:${group.y}px; width:${group.w}px; height:${group.h}px;">
+        <div class="system-head">
+          <strong>${escapeHtml(group.label)}</strong>
+          <span>${escapeHtml(group.subtitle)}</span>
+        </div>
+      </section>`;
+    }
+
+    function nodeSlotMarkup(nodeId) {
+      const layout = TOPOLOGY_NODES[nodeId];
+      if (!layout) return "";
+      const className = layout.className || "";
+      return `<div class="node-slot" style="left:${layout.x}px; top:${layout.y}px; width:${layout.w}px; height:${layout.h}px;">
+        ${nodeMarkup(nodeId, className)}
+      </div>`;
+    }
+
     function renderFlow() {
       els.flowBox.innerHTML = `
         <div class="topology-shell" id="topologyShell">
-          <svg id="flowEdges" class="flow-edges" aria-hidden="true"></svg>
-          <div class="flow-grid">
-            <div class="entry-zone">
-              ${nodeMarkup("query", "node-external")}
-            </div>
-
-            <div class="middle-zone">
-              <section class="system-box knowledge-system">
-                <div class="system-head">
-                  <strong>知识快系统</strong>
-                  <span>Knowledge Fast System</span>
-                </div>
-                <div class="knowledge-layout">
-                  <div class="knowledge-row">
-                    ${nodeMarkup("router")}
-                  </div>
-                  <div class="knowledge-row">
-                    ${nodeMarkup("kagDirect")}
-                    ${nodeMarkup("websearch")}
-                  </div>
-                  <div class="knowledge-row same-level">
-                    ${nodeMarkup("kagKnowledge")}
-                    ${nodeMarkup("pageKnowledge")}
-                  </div>
-                </div>
-              </section>
-
-              <section class="system-box task-system">
-                <div class="system-head">
-                  <strong>任务快系统</strong>
-                  <span>Task Fast System</span>
-                </div>
-                ${nodeMarkup("taskFast")}
-              </section>
-            </div>
-
-            <section class="system-box slow-system">
-              <div class="system-head">
-                <strong>慢系统</strong>
-                <span>Slow System</span>
-              </div>
-              <div class="slow-layout">
-                ${nodeMarkup("domainMd")}
-                ${nodeMarkup("unillm", "node-logic")}
-              </div>
-            </section>
-
-            <div class="exit-zone">
-              ${nodeMarkup("result", "node-result")}
+          <div class="flow-stage" id="flowStage">
+            <svg id="flowEdges" class="flow-edges" aria-hidden="true"></svg>
+            <div class="flow-grid">
+              ${groupMarkup("knowledge")}
+              ${groupMarkup("slow")}
+              ${Object.keys(TOPOLOGY_NODES).map(nodeSlotMarkup).join("")}
             </div>
           </div>
         </div>
@@ -1753,7 +1533,26 @@
         });
       });
 
-      window.requestAnimationFrame(drawFlowEdges);
+      window.requestAnimationFrame(() => {
+        fitFlowTopology();
+        drawFlowEdges();
+      });
+    }
+
+    function fitFlowTopology() {
+      const shell = document.getElementById("topologyShell");
+      const stage = document.getElementById("flowStage");
+      if (!shell || !stage) return;
+
+      const stageWidth = TOPOLOGY_STAGE.width;
+      const stageHeight = TOPOLOGY_STAGE.height;
+      const shellWidth = shell.clientWidth;
+      const shellHeight = shell.clientHeight;
+      const scale = Math.min(shellWidth / stageWidth, shellHeight / stageHeight);
+      const offsetX = (shellWidth - stageWidth * scale) / 2;
+      const offsetY = (shellHeight - stageHeight * scale) / 2;
+
+      stage.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
     }
 
     function renderNodeValue(nodeInfo) {
@@ -1780,113 +1579,75 @@
       }
     }
 
-    function renderRawGrid() {
-      const row = state.activeRow;
-      const fields = DEFAULT_COLUMNS.filter(field => state.headers.includes(field));
-      els.rawGrid.innerHTML = fields.map(field => {
-        const value = cellValue(row, field) || "";
-        return `<div class="raw-item"><b>${escapeHtml(field)}</b><span>${escapeHtml(value)}</span></div>`;
-      }).join("");
-    }
-
     function drawFlowEdges() {
-      const shell = document.getElementById("topologyShell");
       const svg = document.getElementById("flowEdges");
-      if (!shell || !svg) return;
+      if (!svg) return;
 
-      const box = shell.getBoundingClientRect();
-      const width = shell.scrollWidth || box.width;
-      const height = shell.scrollHeight || box.height;
+      const width = TOPOLOGY_STAGE.width;
+      const height = TOPOLOGY_STAGE.height;
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
       svg.setAttribute("width", width);
       svg.setAttribute("height", height);
 
       svg.innerHTML = `
         <defs>
-          <marker id="flowArrow" viewBox="0 0 10 10" refX="8.8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"></path>
-          </marker>
-          <marker id="iterationArrow" viewBox="0 0 10 10" refX="8.8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"></path>
+          <marker id="flowArrow" viewBox="0 0 10 10" refX="8.8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f343b"></path>
           </marker>
         </defs>
       `;
 
-      FLOW_EDGES.forEach(edge => drawEdge(svg, shell, edge));
-      drawIterationLoops(svg, shell);
+      TOPOLOGY_DRAW_EDGES.forEach(([from, to]) => drawEdge(svg, from, to));
     }
 
-    function nodeElement(id) {
-      return document.querySelector(`.flow-node[data-node="${id}"]`);
-    }
-
-    function getAnchor(element, shell, side) {
-      const shellRect = shell.getBoundingClientRect();
-      const rect = element.getBoundingClientRect();
-      const left = rect.left - shellRect.left + shell.scrollLeft;
-      const top = rect.top - shellRect.top + shell.scrollTop;
-      const right = left + rect.width;
-      const bottom = top + rect.height;
-      const centerX = left + rect.width / 2;
-      const centerY = top + rect.height / 2;
-
-      if (side === "left") return { x: left, y: centerY };
-      if (side === "right") return { x: right, y: centerY };
-      if (side === "top") return { x: centerX, y: top };
-      if (side === "bottom") return { x: centerX, y: bottom };
+    function topologyAnchor(id, side) {
+      if (TOPOLOGY_POINTS[id]) return { ...TOPOLOGY_POINTS[id] };
+      const node = TOPOLOGY_NODES[id];
+      if (!node) return null;
+      const centerX = node.x + node.w / 2;
+      const centerY = node.y + node.h / 2;
+      if (side === "left") return { x: node.x, y: centerY };
+      if (side === "right") return { x: node.x + node.w, y: centerY };
+      if (side === "top") return { x: centerX, y: node.y };
+      if (side === "bottom") return { x: centerX, y: node.y + node.h };
       return { x: centerX, y: centerY };
     }
 
-    function drawEdge(svg, shell, edge) {
-      const fromEl = nodeElement(edge.from);
-      const toEl = nodeElement(edge.to);
-      if (!fromEl || !toEl) return;
+    function routeTopologyPath(from, to, route) {
+      const start = topologyAnchor(from, route.sides[0]);
+      const end = topologyAnchor(to, route.sides[1]);
+      if (!start || !end) return "";
+      const points = [{ ...start }];
+      let current = { ...start };
 
-      const start = getAnchor(fromEl, shell, edge.fromSide);
-      const end = getAnchor(toEl, shell, edge.toSide);
-      const dx = Math.abs(end.x - start.x);
-      const dy = Math.abs(end.y - start.y);
-      let d = "";
+      route.steps.forEach(([axis, value]) => {
+        const target = value === "toEnd" ? (axis === "h" ? end.x : end.y) : value;
+        current = axis === "h"
+          ? { x: target, y: current.y }
+          : { x: current.x, y: target };
+        points.push({ ...current });
+      });
 
-      if (edge.fromSide === "bottom" && edge.toSide === "top") {
-        const bend = Math.max(24, dy * 0.42);
-        d = `M ${start.x} ${start.y} C ${start.x} ${start.y + bend}, ${end.x} ${end.y - bend}, ${end.x} ${end.y}`;
-      } else {
-        const bend = Math.max(42, dx * 0.42);
-        d = `M ${start.x} ${start.y} C ${start.x + bend} ${start.y}, ${end.x - bend} ${end.y}, ${end.x} ${end.y}`;
-      }
-
-      const path = createSvgPath(d, "flow-edge", "url(#flowArrow)");
-      svg.appendChild(path);
+      const last = points[points.length - 1];
+      if (last.x !== end.x || last.y !== end.y) points.push(end);
+      return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
     }
 
-    function drawIterationLoops(svg, shell) {
-      const uni = nodeElement("unillm");
-      if (!uni) return;
-
-      const shellRect = shell.getBoundingClientRect();
-      const rect = uni.getBoundingClientRect();
-      const left = rect.left - shellRect.left + shell.scrollLeft;
-      const top = rect.top - shellRect.top + shell.scrollTop;
-      const right = left + rect.width;
-      const bottom = top + rect.height;
-      const midY = top + rect.height / 2;
-      const midX = left + rect.width / 2;
-
-      const loopA = `M ${right - 2} ${midY - 10}
-        C ${right + 44} ${midY - 52}, ${right + 52} ${midY + 32}, ${right - 2} ${midY + 14}`;
-      const loopB = `M ${midX - 28} ${bottom - 2}
-        C ${midX - 58} ${bottom + 42}, ${midX + 58} ${bottom + 42}, ${midX + 28} ${bottom - 2}`;
-
-      svg.appendChild(createSvgPath(loopA, "flow-edge iteration", "url(#iterationArrow)"));
-      svg.appendChild(createSvgPath(loopB, "flow-edge iteration", "url(#iterationArrow)"));
+    function drawEdge(svg, from, to) {
+      const route = TOPOLOGY_EDGE_ROUTES[`${from}->${to}`];
+      if (!route) return;
+      const d = routeTopologyPath(from, to, route);
+      if (!d) return;
+      const markerEnd = route.markerEnd === false ? "" : "url(#flowArrow)";
+      const path = createSvgPath(d, "flow-edge", markerEnd);
+      svg.appendChild(path);
     }
 
     function createSvgPath(d, className, markerEnd) {
       const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
       path.setAttribute("d", d);
       path.setAttribute("class", className);
-      path.setAttribute("marker-end", markerEnd);
+      if (markerEnd) path.setAttribute("marker-end", markerEnd);
       return path;
     }
 
@@ -1896,7 +1657,6 @@
     });
 
     els.clearBtn.addEventListener("click", clearCurrentData);
-    els.clearHistoryBtn.addEventListener("click", clearHistory);
     els.clearFiltersBtn.addEventListener("click", clearFilters);
     els.copyValueBtn.addEventListener("click", copyCurrentValue);
 
@@ -1943,11 +1703,13 @@
 
     window.addEventListener("resize", () => {
       if (els.detailModal.classList.contains("show")) {
-        window.requestAnimationFrame(drawFlowEdges);
+        window.requestAnimationFrame(() => {
+          fitFlowTopology();
+          drawFlowEdges();
+        });
       }
     });
 
-    renderHistory();
   </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
