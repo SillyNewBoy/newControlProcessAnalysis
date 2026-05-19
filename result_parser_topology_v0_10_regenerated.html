@@ -508,7 +508,7 @@
       min-width: 0;
       display: grid;
       grid-template-rows: auto 1fr;
-      min-height: 300px;
+      min-height: 0;
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
     }
 
@@ -528,9 +528,10 @@
 
     .value-sections {
       display: grid;
-      grid-template-rows: minmax(96px, 0.45fr) minmax(140px, 0.55fr);
+      grid-template-rows: auto auto;
       gap: 10px;
       min-height: 0;
+      align-items: start;
     }
 
     .value-section {
@@ -548,7 +549,7 @@
 
     .value-content {
       min-height: 0;
-      height: 100%;
+      height: auto;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: #f8fafc;
@@ -557,7 +558,7 @@
       word-break: break-word;
       color: #172033;
       line-height: 1.7;
-      overflow: auto;
+      overflow: visible;
       margin: 0;
       font-family: inherit;
       font-size: 13px;
@@ -968,7 +969,7 @@
       }
 
       .value-card {
-        min-height: 260px;
+        min-height: 0;
       }
 
       .flow-topology {
@@ -1329,15 +1330,31 @@
     }
 
     function cellValue(row, field) {
-      const value = row?.[field];
+      const actualField = resolveRowFieldName(row, field);
+      const value = row?.[actualField];
       if (value === undefined || value === null) return "";
       return String(value).trim();
+    }
+
+    function resolveFieldName(field) {
+      if (!field) return "";
+      if (state.headers.includes(field)) return field;
+      const normalized = normalizeHeader(field).toLowerCase();
+      return state.headers.find(header => normalizeHeader(header).toLowerCase() === normalized) || field;
+    }
+
+    function resolveRowFieldName(row, field) {
+      if (!field || !row) return field || "";
+      if (Object.prototype.hasOwnProperty.call(row, field)) return field;
+      const normalized = normalizeHeader(field).toLowerCase();
+      return Object.keys(row).find(key => normalizeHeader(key).toLowerCase() === normalized) || field;
     }
 
     function parseBooleanLike(value) {
       if (value === true) return true;
       if (value === false || value === undefined || value === null) return false;
-      return String(value).trim().toLowerCase() === "true";
+      const text = String(value).trim().toLowerCase();
+      return ["true", "1", "yes", "y", "是"].includes(text);
     }
 
     function valueToText(value) {
@@ -1348,19 +1365,40 @@
     }
 
     function parseJsonCell(rawValue) {
-      const raw = String(rawValue ?? "").trim();
-      if (!raw || !raw.startsWith("{")) return null;
-      try {
-        const parsed = JSON.parse(raw);
+      if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) return rawValue;
+      let raw = String(rawValue ?? "").trim();
+      if (!raw) return null;
+      raw = raw
+        .replace(/[\u201c\u201d]/g, '"')
+        .replace(/[\u2018\u2019]/g, "'");
+      const parseObject = value => {
+        const parsed = JSON.parse(value);
+        if (typeof parsed === "string") {
+          const inner = parsed.trim();
+          if (inner.startsWith("{")) return parseObject(inner);
+        }
         return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+      };
+      try {
+        return parseObject(raw);
       } catch (error) {
-        return null;
+        if (!raw.startsWith("{")) return null;
+        try {
+          const normalized = raw
+            .replace(/:\s*True(?=\s*[,}])/g, ": true")
+            .replace(/:\s*False(?=\s*[,}])/g, ": false")
+            .replace(/:\s*None(?=\s*[,}])/g, ": null");
+          return parseObject(normalized);
+        } catch (fallbackError) {
+          return null;
+        }
       }
     }
 
     function fieldDisplayData(row, field) {
-      const raw = cellValue(row, field);
-      const parsed = JSON_VALUE_FIELDS.has(field) ? parseJsonCell(raw) : null;
+      const fieldName = resolveFieldName(field);
+      const raw = cellValue(row, fieldName);
+      const parsed = JSON_VALUE_FIELDS.has(fieldName) ? parseJsonCell(raw) : null;
       if (!parsed) {
         return {
           raw,
@@ -1390,7 +1428,8 @@
 
     function nodeValueData(row, nodeInfo) {
       const field = nodePrimaryField(nodeInfo);
-      if (!field || !state.headers.includes(field)) {
+      const fieldName = resolveFieldName(field);
+      if (!field || !state.headers.includes(fieldName)) {
         return {
           raw: "",
           content: "",
@@ -1401,7 +1440,7 @@
           isJson: false
         };
       }
-      return fieldDisplayData(row, field);
+      return fieldDisplayData(row, fieldName);
     }
 
     function hasValue(row, field) {
@@ -1435,11 +1474,11 @@
     }
 
     function nodeHasExistingField(nodeInfo) {
-      return nodeInfo.fields.some(field => state.headers.includes(field));
+      return nodeInfo.fields.some(field => state.headers.includes(resolveFieldName(field)));
     }
 
     function nodePrimaryField(nodeInfo) {
-      return nodeInfo.fields.find(field => state.headers.includes(field)) || nodeInfo.fields[0] || "";
+      return nodeInfo.fields.find(field => state.headers.includes(resolveFieldName(field))) || nodeInfo.fields[0] || "";
     }
 
     function nodeStatusMarkup(row, nodeInfo) {
