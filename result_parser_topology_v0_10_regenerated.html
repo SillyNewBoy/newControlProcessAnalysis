@@ -622,11 +622,6 @@
     }
 
     .legend-status.issue {
-      background: #fde68a;
-      color: #92400e;
-    }
-
-    .legend-status.key {
       background: var(--red);
       color: #fff;
     }
@@ -636,6 +631,15 @@
       padding: 0 7px;
       background: #e5e7eb;
       color: #374151;
+      font-size: 9px;
+      text-transform: uppercase;
+    }
+
+    .legend-status.empty {
+      width: auto;
+      padding: 0 7px;
+      background: #f1f5f9;
+      color: #64748b;
       font-size: 9px;
       text-transform: uppercase;
     }
@@ -869,11 +873,6 @@
     }
 
     .node-status.issue {
-      background: #facc15;
-      color: #713f12;
-    }
-
-    .node-status.key {
       background: var(--red);
       color: #fff;
     }
@@ -881,6 +880,14 @@
     .node-status.timeout {
       background: #e5e7eb;
       color: #374151;
+      font-size: 10px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .node-status.empty {
+      background: #f1f5f9;
+      color: #64748b;
       font-size: 10px;
       letter-spacing: 0;
       text-transform: uppercase;
@@ -1132,9 +1139,9 @@
                   <span class="legend-item"><i class="legend-dot gray"></i>字段值为空</span>
                   <span class="legend-item"><i class="legend-dot green"></i>节点字段有值 / 命中标绿规则</span>
                   <span class="legend-item"><i class="legend-dot blue"></i>当前选中节点</span>
-                  <span class="legend-item"><i class="legend-status issue">!</i>问题节点</span>
-                  <span class="legend-item"><i class="legend-status key">X</i>关键问题</span>
+                  <span class="legend-item"><i class="legend-status issue">X</i>错误节点</span>
                   <span class="legend-item"><i class="legend-status timeout">timeout</i>请求超时</span>
+                  <span class="legend-item"><i class="legend-status empty">empty</i>内容为空</span>
                   <span class="legend-item">实线：调用 / 数据流</span>
                   <span class="legend-item">虚线：UniLLM 迭代推理</span>
                 </div>
@@ -1467,24 +1474,22 @@
           raw,
           content: raw,
           reason: "",
-          isIssue: false,
-          isKeyIssue: false,
-          isTimeout: false,
+          isWrong: false,
+          isTimeOut: false,
+          isEmpty: false,
           isJson: false
         };
       }
 
       const content = valueToText(parsed.content);
       const reason = valueToText(parsed.reason);
-      const timeoutKeys = ["node", "is_true", "is_key_issue", "reason", "label"];
-      const isTimeout = Boolean(content) && timeoutKeys.some(key => Object.prototype.hasOwnProperty.call(parsed, key) && isNullLike(parsed[key]));
       return {
         raw,
         content,
         reason,
-        isIssue: parseBooleanLike(parsed.is_true),
-        isKeyIssue: parseBooleanLike(parsed.is_key_issue),
-        isTimeout,
+        isWrong: parseBooleanLike(parsed.is_wrong),
+        isTimeOut: parseBooleanLike(parsed.is_time_out),
+        isEmpty: parseBooleanLike(parsed.is_empty),
         isJson: true
       };
     }
@@ -1497,9 +1502,9 @@
           raw: "",
           content: "",
           reason: "",
-          isIssue: false,
-          isKeyIssue: false,
-          isTimeout: false,
+          isWrong: false,
+          isTimeOut: false,
+          isEmpty: false,
           isJson: false
         };
       }
@@ -1547,9 +1552,9 @@
     function nodeStatusMarkup(row, nodeInfo) {
       const data = nodeValueData(row, nodeInfo);
       const statuses = [];
-      if (data.isIssue) statuses.push('<span class="node-status issue" title="问题节点">!</span>');
-      if (data.isKeyIssue) statuses.push('<span class="node-status key" title="关键问题">X</span>');
-      if (data.isTimeout) statuses.push('<span class="node-status timeout" title="请求超时">timeout</span>');
+      if (data.isWrong) statuses.push('<span class="node-status issue" title="错误节点">X</span>');
+      if (data.isTimeOut) statuses.push('<span class="node-status timeout" title="请求超时">timeout</span>');
+      if (data.isEmpty) statuses.push('<span class="node-status empty" title="内容为空">empty</span>');
       return statuses.length ? `<span class="node-status-list">${statuses.join("")}</span>` : "";
     }
 
