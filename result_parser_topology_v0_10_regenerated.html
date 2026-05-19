@@ -1352,9 +1352,15 @@
 
     function parseBooleanLike(value) {
       if (value === true) return true;
-      if (value === false || value === undefined || value === null) return false;
+      if (value === false || isNullLike(value)) return false;
       const text = String(value).trim().toLowerCase();
       return ["true", "1", "yes", "y", "是"].includes(text);
+    }
+
+    function isNullLike(value) {
+      if (value === undefined || value === null) return true;
+      if (typeof value !== "string") return false;
+      return ["null", "none"].includes(value.trim().toLowerCase());
     }
 
     function valueToText(value) {
@@ -1382,17 +1388,74 @@
       try {
         return parseObject(raw);
       } catch (error) {
-        if (!raw.startsWith("{")) return null;
+        let fallbackRaw = raw;
         try {
-          const normalized = raw
+          const unwrapped = JSON.parse(raw);
+          if (typeof unwrapped === "string") fallbackRaw = unwrapped.trim();
+        } catch (unwrapError) {
+          // Keep the original text when it is not a JSON string wrapper.
+        }
+        if (!fallbackRaw.startsWith("{")) return null;
+        const candidates = [
+          normalizePythonDictText(fallbackRaw),
+          fallbackRaw
             .replace(/:\s*True(?=\s*[,}])/g, ": true")
             .replace(/:\s*False(?=\s*[,}])/g, ": false")
-            .replace(/:\s*None(?=\s*[,}])/g, ": null");
-          return parseObject(normalized);
-        } catch (fallbackError) {
-          return null;
+            .replace(/:\s*None(?=\s*[,}])/g, ": null")
+            .replace(/:\s*Null(?=\s*[,}])/g, ": null")
+        ].filter(Boolean);
+        for (const candidate of candidates) {
+          try {
+            return parseObject(candidate);
+          } catch (fallbackError) {
+            // Try the next normalized form.
+          }
         }
+        return null;
       }
+    }
+
+    function normalizePythonDictText(raw) {
+      let result = "";
+      let quote = "";
+      let escapeNext = false;
+
+      for (const char of raw) {
+        if (escapeNext) {
+          result += char;
+          escapeNext = false;
+          continue;
+        }
+        if (char === "\\") {
+          result += char;
+          escapeNext = true;
+          continue;
+        }
+        if (quote) {
+          if (char === quote) {
+            result += '"';
+            quote = "";
+          } else if (char === '"' && quote === "'") {
+            result += '\\"';
+          } else {
+            result += char;
+          }
+          continue;
+        }
+        if (char === "'" || char === '"') {
+          quote = char;
+          result += '"';
+          continue;
+        }
+        result += char;
+      }
+
+      return result
+        .replace(/:\s*True(?=\s*[,}])/g, ": true")
+        .replace(/:\s*False(?=\s*[,}])/g, ": false")
+        .replace(/:\s*None(?=\s*[,}])/g, ": null")
+        .replace(/:\s*Null(?=\s*[,}])/g, ": null")
+        .replace(/:\s*'null'(?=\s*[,}])/g, ': "null"');
     }
 
     function fieldDisplayData(row, field) {
@@ -1414,7 +1477,7 @@
       const content = valueToText(parsed.content);
       const reason = valueToText(parsed.reason);
       const timeoutKeys = ["node", "is_true", "is_key_issue", "reason", "label"];
-      const isTimeout = Boolean(content) && timeoutKeys.some(key => Object.prototype.hasOwnProperty.call(parsed, key) && parsed[key] === null);
+      const isTimeout = Boolean(content) && timeoutKeys.some(key => Object.prototype.hasOwnProperty.call(parsed, key) && isNullLike(parsed[key]));
       return {
         raw,
         content,
