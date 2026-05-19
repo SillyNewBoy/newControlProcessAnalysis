@@ -508,7 +508,7 @@
       min-width: 0;
       display: grid;
       grid-template-rows: auto 1fr;
-      min-height: 220px;
+      min-height: 300px;
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
     }
 
@@ -526,6 +526,26 @@
       font-size: 14px;
     }
 
+    .value-sections {
+      display: grid;
+      grid-template-rows: minmax(96px, 0.45fr) minmax(140px, 0.55fr);
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .value-section {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .value-section-title {
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .value-content {
       min-height: 0;
       height: 100%;
@@ -541,6 +561,10 @@
       margin: 0;
       font-family: inherit;
       font-size: 13px;
+    }
+
+    .value-content.empty-text {
+      color: var(--muted);
     }
 
     .legend {
@@ -581,6 +605,38 @@
     .legend-dot.gray {
       background: var(--empty-node-bg);
       border-color: var(--empty-node-border);
+    }
+
+    .legend-status {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .legend-status.issue {
+      background: #fde68a;
+      color: #92400e;
+    }
+
+    .legend-status.key {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .legend-status.timeout {
+      width: auto;
+      padding: 0 7px;
+      background: #e5e7eb;
+      color: #374151;
+      font-size: 9px;
+      text-transform: uppercase;
     }
 
     .flow-topology {
@@ -780,6 +836,53 @@
       color: #b45309;
       font-size: 14px;
       line-height: 1.1;
+    }
+
+    .node-status-list {
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 8px);
+      transform: translateX(-50%);
+      z-index: 18;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .node-status {
+      min-width: 26px;
+      height: 26px;
+      padding: 0 7px;
+      border-radius: 999px;
+      border: 2px solid #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .node-status.issue {
+      background: #facc15;
+      color: #713f12;
+    }
+
+    .node-status.key {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .node-status.timeout {
+      background: #e5e7eb;
+      color: #374151;
+      font-size: 10px;
+      letter-spacing: 0;
+      text-transform: uppercase;
     }
 
     .column-panel {
@@ -1028,6 +1131,9 @@
                   <span class="legend-item"><i class="legend-dot gray"></i>字段值为空</span>
                   <span class="legend-item"><i class="legend-dot green"></i>节点字段有值 / 命中标绿规则</span>
                   <span class="legend-item"><i class="legend-dot blue"></i>当前选中节点</span>
+                  <span class="legend-item"><i class="legend-status issue">!</i>问题节点</span>
+                  <span class="legend-item"><i class="legend-status key">X</i>关键问题</span>
+                  <span class="legend-item"><i class="legend-status timeout">timeout</i>请求超时</span>
                   <span class="legend-item">实线：调用 / 数据流</span>
                   <span class="legend-item">虚线：UniLLM 迭代推理</span>
                 </div>
@@ -1040,7 +1146,16 @@
                 <strong id="selectedNodeTitle">网页知识</strong>
                 <button id="copyValueBtn" class="btn secondary" type="button">一键复制</button>
               </div>
-              <pre id="nodeValueContent" class="value-content"></pre>
+              <div class="value-sections">
+                <section class="value-section">
+                  <div class="value-section-title">问题分析</div>
+                  <pre id="nodeReasonContent" class="value-content empty-text"></pre>
+                </section>
+                <section class="value-section">
+                  <div class="value-section-title">内容</div>
+                  <pre id="nodeValueContent" class="value-content"></pre>
+                </section>
+              </div>
             </div>
           </div>
 
@@ -1069,6 +1184,16 @@
       "通顺性",
       "备注"
     ];
+
+    const JSON_VALUE_FIELDS = new Set([
+      "intent",
+      "webSearch",
+      "queryUnstandingRouterType",
+      "垂域.md",
+      "网页知识",
+      "运营话术",
+      "知识库"
+    ]);
 
     const TASK_FAST_NEUTRAL_INTENTS = new Set(["QA", "KAG", "CHAT", "DISPLAY_NLU_THINK#CHAT"]);
 
@@ -1193,6 +1318,7 @@
       detailMeta: document.getElementById("detailMeta"),
       flowBox: document.getElementById("flowBox"),
       selectedNodeTitle: document.getElementById("selectedNodeTitle"),
+      nodeReasonContent: document.getElementById("nodeReasonContent"),
       nodeValueContent: document.getElementById("nodeValueContent"),
       copyValueBtn: document.getElementById("copyValueBtn"),
       toast: document.getElementById("toast")
@@ -1208,14 +1334,82 @@
       return String(value).trim();
     }
 
+    function parseBooleanLike(value) {
+      if (value === true) return true;
+      if (value === false || value === undefined || value === null) return false;
+      return String(value).trim().toLowerCase() === "true";
+    }
+
+    function valueToText(value) {
+      if (value === undefined || value === null) return "";
+      if (typeof value === "string") return value.trim();
+      if (typeof value === "object") return JSON.stringify(value, null, 2);
+      return String(value).trim();
+    }
+
+    function parseJsonCell(rawValue) {
+      const raw = String(rawValue ?? "").trim();
+      if (!raw || !raw.startsWith("{")) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function fieldDisplayData(row, field) {
+      const raw = cellValue(row, field);
+      const parsed = JSON_VALUE_FIELDS.has(field) ? parseJsonCell(raw) : null;
+      if (!parsed) {
+        return {
+          raw,
+          content: raw,
+          reason: "",
+          isIssue: false,
+          isKeyIssue: false,
+          isTimeout: false,
+          isJson: false
+        };
+      }
+
+      const content = valueToText(parsed.content);
+      const reason = valueToText(parsed.reason);
+      const timeoutKeys = ["node", "is_true", "is_key_issue", "reason", "label"];
+      const isTimeout = Boolean(content) && timeoutKeys.some(key => Object.prototype.hasOwnProperty.call(parsed, key) && parsed[key] === null);
+      return {
+        raw,
+        content,
+        reason,
+        isIssue: parseBooleanLike(parsed.is_true),
+        isKeyIssue: parseBooleanLike(parsed.is_key_issue),
+        isTimeout,
+        isJson: true
+      };
+    }
+
+    function nodeValueData(row, nodeInfo) {
+      const field = nodePrimaryField(nodeInfo);
+      if (!field || !state.headers.includes(field)) {
+        return {
+          raw: "",
+          content: "",
+          reason: "",
+          isIssue: false,
+          isKeyIssue: false,
+          isTimeout: false,
+          isJson: false
+        };
+      }
+      return fieldDisplayData(row, field);
+    }
+
     function hasValue(row, field) {
-      return cellValue(row, field).length > 0;
+      return fieldDisplayData(row, field).content.length > 0;
     }
 
     function nodeRawValue(row, nodeInfo) {
-      const field = nodePrimaryField(nodeInfo);
-      if (!field || !state.headers.includes(field)) return "";
-      return cellValue(row, field);
+      return nodeValueData(row, nodeInfo).content;
     }
 
     function nodeHasValue(row, nodeInfo) {
@@ -1223,7 +1417,7 @@
     }
 
     function normalizedIntentValue(row) {
-      return cellValue(row, "intent").trim().toUpperCase();
+      return fieldDisplayData(row, "intent").content.trim().toUpperCase();
     }
 
     function isTaskFastGreen(row) {
@@ -1246,6 +1440,15 @@
 
     function nodePrimaryField(nodeInfo) {
       return nodeInfo.fields.find(field => state.headers.includes(field)) || nodeInfo.fields[0] || "";
+    }
+
+    function nodeStatusMarkup(row, nodeInfo) {
+      const data = nodeValueData(row, nodeInfo);
+      const statuses = [];
+      if (data.isIssue) statuses.push('<span class="node-status issue" title="问题节点">!</span>');
+      if (data.isKeyIssue) statuses.push('<span class="node-status key" title="关键问题">X</span>');
+      if (data.isTimeout) statuses.push('<span class="node-status timeout" title="请求超时">timeout</span>');
+      return statuses.length ? `<span class="node-status-list">${statuses.join("")}</span>` : "";
     }
 
     function shortText(value, max = 20) {
@@ -1352,11 +1555,17 @@
         .filter(([, value]) => value.length > 0);
 
       return state.rows.filter(row => {
-        const globalMatched = !keyword || Object.values(row).some(value => String(value ?? "").toLowerCase().includes(keyword));
+        const globalMatched = !keyword || state.headers.some(field => {
+          const raw = String(row[field] ?? "").toLowerCase();
+          const display = fieldDisplayData(row, field).content.toLowerCase();
+          return raw.includes(keyword) || display.includes(keyword);
+        });
         if (!globalMatched) return false;
 
         return filters.every(([field, value]) => {
-          return String(row[field] ?? "").toLowerCase().includes(value);
+          const raw = String(row[field] ?? "").toLowerCase();
+          const display = fieldDisplayData(row, field).content.toLowerCase();
+          return raw.includes(value) || display.includes(value);
         });
       });
     }
@@ -1469,7 +1678,8 @@
     }
 
     function renderCell(row, col) {
-      const value = cellValue(row, col);
+      const data = fieldDisplayData(row, col);
+      const value = data.content;
       const display = shortText(value, 20);
       const cls = getTagClass(col, value);
       const useTag = ["评测结果", "相关性", "正确性", "信息量", "通顺性"].includes(col) && value;
@@ -1539,9 +1749,11 @@
       const fieldTip = nodeHasExistingField(nodeInfo)
         ? `<small>${escapeHtml(nodePrimaryField(nodeInfo))}</small>`
         : missing;
+      const statusBadges = nodeStatusMarkup(state.activeRow, nodeInfo);
       return `<button class="flow-node ${extraClass} ${visualClass} ${active}" data-node="${nodeInfo.id}" type="button">
         <span class="node-label">${escapeHtml(nodeInfo.label)}</span>
         ${fieldTip}
+        ${statusBadges}
       </button>`;
     }
 
@@ -1612,8 +1824,11 @@
     }
 
     function renderNodeValue(nodeInfo) {
+      const data = nodeValueData(state.activeRow, nodeInfo);
       els.selectedNodeTitle.textContent = nodeInfo.label;
-      els.nodeValueContent.textContent = nodeRawValue(state.activeRow, nodeInfo);
+      els.nodeReasonContent.textContent = data.reason || "暂无问题分析";
+      els.nodeReasonContent.classList.toggle("empty-text", !data.reason);
+      els.nodeValueContent.textContent = data.content;
     }
 
     async function copyCurrentValue() {
