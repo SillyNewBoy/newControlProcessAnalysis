@@ -628,11 +628,10 @@
 
     .legend-status.timeout {
       width: auto;
-      padding: 0 7px;
+      padding: 0 8px;
       background: #e5e7eb;
       color: #374151;
       font-size: 9px;
-      text-transform: uppercase;
     }
 
     .legend-status.empty {
@@ -882,7 +881,6 @@
       color: #374151;
       font-size: 10px;
       letter-spacing: 0;
-      text-transform: uppercase;
     }
 
     .node-status.empty {
@@ -1140,7 +1138,7 @@
                   <span class="legend-item"><i class="legend-dot green"></i>节点字段有值 / 命中标绿规则</span>
                   <span class="legend-item"><i class="legend-dot blue"></i>当前选中节点</span>
                   <span class="legend-item"><i class="legend-status issue">X</i>错误节点</span>
-                  <span class="legend-item"><i class="legend-status timeout">timeout</i>请求超时</span>
+                  <span class="legend-item"><i class="legend-status timeout">评测模型未评测</i>评测模型未评测</span>
                   <span class="legend-item"><i class="legend-status empty">empty</i>内容为空</span>
                   <span class="legend-item">实线：调用 / 数据流</span>
                   <span class="legend-item">虚线：UniLLM 迭代推理</span>
@@ -1381,6 +1379,7 @@
       if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) return rawValue;
       let raw = String(rawValue ?? "").trim();
       if (!raw) return null;
+      raw = raw.replaceAll("_x000D_", "\n");
       raw = raw
         .replace(/[\u201c\u201d]/g, '"')
         .replace(/[\u2018\u2019]/g, "'");
@@ -1418,8 +1417,64 @@
             // Try the next normalized form.
           }
         }
-        return null;
+        return parseLooseNodeData(fallbackRaw);
       }
+    }
+
+    function parseLooseNodeData(raw) {
+      const hasNodeKeys = /\b(?:is_wrong|is_time_out|is_empty|reason|content)\b/i.test(raw);
+      if (!hasNodeKeys) return null;
+      const result = {
+        is_wrong: readLooseField(raw, "is_wrong"),
+        is_time_out: readLooseField(raw, "is_time_out"),
+        is_empty: readLooseField(raw, "is_empty"),
+        reason: readLooseField(raw, "reason"),
+        content: readLooseField(raw, "content")
+      };
+      const hasAnyValue = Object.values(result).some(value => value !== undefined);
+      return hasAnyValue ? result : null;
+    }
+
+    function readLooseField(raw, key) {
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(`(?:^|[,{\\n\\r])\\s*['"]?${escapedKey}['"]?\\s*:\\s*`, "i");
+      const match = pattern.exec(raw);
+      if (!match) return undefined;
+      return readLooseValue(raw, match.index + match[0].length);
+    }
+
+    function readLooseValue(raw, startIndex) {
+      let index = startIndex;
+      while (index < raw.length && /\s/.test(raw[index])) index += 1;
+      const quote = raw[index] === "'" || raw[index] === '"' ? raw[index] : "";
+      if (quote) {
+        index += 1;
+        let value = "";
+        let escapeNext = false;
+        for (; index < raw.length; index += 1) {
+          const char = raw[index];
+          if (escapeNext) {
+            value += char;
+            escapeNext = false;
+            continue;
+          }
+          if (char === "\\") {
+            escapeNext = true;
+            continue;
+          }
+          if (char === quote) return value.trim();
+          value += char;
+        }
+        return value.trim();
+      }
+
+      let value = "";
+      for (; index < raw.length; index += 1) {
+        const char = raw[index];
+        if (char === "," || char === "}") break;
+        value += char;
+      }
+      return value.trim().replace(/^['"]|['"]$/g, "");
     }
 
     function normalizePythonDictText(raw) {
@@ -1553,7 +1608,7 @@
       const data = nodeValueData(row, nodeInfo);
       const statuses = [];
       if (data.isWrong) statuses.push('<span class="node-status issue" title="错误节点">X</span>');
-      if (data.isTimeOut) statuses.push('<span class="node-status timeout" title="请求超时">timeout</span>');
+      if (data.isTimeOut) statuses.push('<span class="node-status timeout" title="评测模型未评测">评测模型未评测</span>');
       if (data.isEmpty) statuses.push('<span class="node-status empty" title="内容为空">empty</span>');
       return statuses.length ? `<span class="node-status-list">${statuses.join("")}</span>` : "";
     }
