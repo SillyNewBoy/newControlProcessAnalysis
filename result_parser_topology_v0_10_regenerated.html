@@ -277,6 +277,30 @@
       grid-template-columns: 200px 1fr 110px;
       align-items: center;
       gap: 12px;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 4px 8px;
+      margin: 0 -8px;
+      transition: background 0.15s;
+    }
+
+    .chart-row:hover {
+      background: #f1f5f9;
+    }
+
+    .chart-row.active {
+      background: #fef2f2;
+    }
+
+    .chart-row.active .chart-label {
+      color: #ef4444;
+      font-weight: 700;
+    }
+
+    .chart-filter-tip {
+      font-size: 12px;
+      color: #ef4444;
+      font-weight: 600;
     }
 
     .chart-label {
@@ -1345,7 +1369,8 @@
       activeRow: null,
       activeNodeId: null,
       searchKeyword: "",
-      columnFilters: {}
+      columnFilters: {},
+      isWrongFilter: null
     };
 
     const els = {
@@ -1777,6 +1802,8 @@
         .filter(([, value]) => value.length > 0);
 
       return state.rows.filter(row => {
+        if (state.isWrongFilter && !fieldDisplayData(row, state.isWrongFilter).isWrong) return false;
+
         const globalMatched = !keyword || state.headers.some(field => {
           const raw = String(row[field] ?? "").toLowerCase();
           const display = fieldDisplayData(row, field).content.toLowerCase();
@@ -1795,7 +1822,9 @@
     function clearFilters() {
       state.searchKeyword = "";
       state.columnFilters = {};
+      state.isWrongFilter = null;
       els.searchInput.value = "";
+      renderStats();
       renderTable();
       showToast("已清空全部筛选条件");
     }
@@ -1842,15 +1871,16 @@
         <div class="chart-panel">
           <div class="chart-header">
             <strong>错误根因分布统计</strong>
-            <span class="chart-total">总行数：${total}</span>
+            <span class="chart-total">总行数：${total}${state.isWrongFilter ? `　<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} · 点击同行可取消</span>` : ""}</span>
           </div>
           <div class="chart-body">
             ${chartData.map(d => {
               const barWidth = d.wrongCount > 0 ? (d.wrongCount / maxCount * 100).toFixed(1) : 0;
               const isZero = d.wrongCount === 0;
+              const isActive = state.isWrongFilter === d.field;
               return `
-                <div class="chart-row">
-                  <div class="chart-label" title="${escapeHtml(d.field)}">${escapeHtml(d.field)}</div>
+                <div class="chart-row${isActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" title="点击筛选该字段 is_wrong 数据">
+                  <div class="chart-label">${escapeHtml(d.field)}</div>
                   <div class="chart-track">
                     <div class="chart-bar${isZero ? " zero" : ""}" style="width:${barWidth}%"></div>
                   </div>
@@ -1861,6 +1891,20 @@
             }).join("")}
           </div>
         </div>`;
+
+      [...els.statsArea.querySelectorAll(".chart-row")].forEach(row => {
+        row.addEventListener("click", () => {
+          const field = row.dataset.field;
+          state.isWrongFilter = state.isWrongFilter === field ? null : field;
+          renderStats();
+          renderTable();
+          if (state.isWrongFilter) {
+            showToast(`已筛选：${field} is_wrong = true`);
+          } else {
+            showToast("已取消 is_wrong 筛选");
+          }
+        });
+      });
     }
 
     function renderTable() {
