@@ -236,22 +236,91 @@
       max-width: 100%;
     }
 
-    .stat-card {
+    /* ── chart area ── */
+    .chart-area {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .chart-panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
     }
 
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      margin-top: 8px;
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
     }
 
-    .stat-label {
+    .chart-header strong {
+      font-size: 14px;
+    }
+
+    .chart-total {
+      font-size: 13px;
       color: var(--muted);
+    }
+
+    .chart-body {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 200px 1fr 110px;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart-label {
+      font-size: 13px;
+      color: #334155;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chart-track {
+      background: #f1f5f9;
+      border-radius: 6px;
+      height: 22px;
+      overflow: hidden;
+    }
+
+    .chart-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+      border-radius: 6px;
+      min-width: 0;
+      transition: width 0.35s ease;
+    }
+
+    .chart-bar.zero {
+      background: #e2e8f0;
+    }
+
+    .chart-meta {
       font-size: 12px;
+      color: #64748b;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .chart-pct {
+      font-weight: 700;
+      color: #ef4444;
+      margin-left: 4px;
+    }
+
+    .chart-pct.zero {
+      color: #94a3b8;
     }
 
     .table-card {
@@ -1039,7 +1108,7 @@
       <div class="brand">
         <div class="logo">RP</div>
         <div>
-          <h1>结果解析工具</h1>
+          <h1>产品专家定位定界工具</h1>
           <span>Excel 结果分析 · 业务流拓扑追踪</span>
         </div>
       </div>
@@ -1052,32 +1121,7 @@
 
     <main class="layout">
       <section class="content">
-        <div class="intro-grid">
-          <div class="panel">
-            <h2>版本工具名称</h2>
-            <p><b>结果解析 HTML 工具</b></p>
-            <p>用于导入本地 Excel 表格，对关键字段进行解析、筛选、展示，并通过业务流拓扑定位每条数据在快系统、慢系统与最终结果中的链路内容。</p>
-          </div>
-          <div class="panel">
-            <h2>工具使用说明</h2>
-            <ul>
-              <li>点击左上角导入 .xlsx / .xls / .xlsm 文件。</li>
-              <li>导入后每个表头均支持字段级筛选。</li>
-              <li>点击表格行查看业务流拓扑与当前节点字段 value。</li>
-              <li>右侧 value 区支持滚动查看与一键复制。</li>
-            </ul>
-          </div>
-          <div class="panel">
-            <h2>版本更新</h2>
-            <ul>
-              <li>v0.10：字段值为空的拓扑节点置灰。</li>
-              <li>v0.10：任务快系统按 intent 特殊规则标绿。</li>
-              <li>v0.10：详情页同屏展示拓扑图和节点 value。</li>
-            </ul>
-          </div>
-        </div>
-
-        <div id="statsArea" class="stats hidden"></div>
+        <div id="statsArea" class="chart-area hidden"></div>
 
         <div id="tableCard" class="table-card hidden">
           <div class="table-toolbar">
@@ -1101,7 +1145,7 @@
 
         <div id="emptyCard" class="main-card panel">
           <h2>等待导入</h2>
-          <p>请导入一张 Excel 表格。系统会优先解析这些字段：query、DispalyText、intent、webSearch、queryUnstandingRouterType、知识库、运营话术、网页知识、垂域.md、评测结果、相关性、正确性、信息量、通顺性、备注。</p>
+          <p>请导入一张 Excel 表格。系统会优先解析这些字段：query、sessionId、出错原文、intent、webSearch、queryUnstandingRouterType、知识库、运营话术、网页知识、垂域.md、评测结果、相关性、正确性、信息量、模型问题、备注。</p>
         </div>
       </section>
     </main>
@@ -1175,7 +1219,8 @@
   <script>
     const DEFAULT_COLUMNS = [
       "query",
-      "DispalyText",
+      "sessionId",
+      "出错原文",
       "intent",
       "webSearch",
       "queryUnstandingRouterType",
@@ -1187,7 +1232,7 @@
       "相关性",
       "正确性",
       "信息量",
-      "通顺性",
+      "模型问题",
       "备注"
     ];
 
@@ -1198,7 +1243,8 @@
       "垂域.md",
       "网页知识",
       "运营话术",
-      "知识库"
+      "知识库",
+      "模型问题"
     ]);
 
     const TASK_FAST_NEUTRAL_INTENTS = new Set(["QA", "KAG", "CHAT", "DISPLAY_NLU_THINK#CHAT"]);
@@ -1212,8 +1258,8 @@
       { id: "pageKnowledge", label: "网页知识", fields: ["网页知识"], note: "websearch 的同层子节点之一，与 KAG知识 保持同一层级。", type: "knowledge" },
       { id: "taskFast", label: "任务快系统", fields: ["intent"], note: "当 intent 不属于 QA/KAG/CHAT/DISPLAY_NLU_THINK#CHAT 且非空时标绿。", type: "task" },
       { id: "domainMd", label: "垂域.md", fields: ["垂域.md"], note: "慢系统内的垂域上下文节点，作为 UniLLM 的输入之一。", type: "slow" },
-      { id: "unillm", label: "UniLLM", fields: ["DispalyText"], note: "慢系统统一推理节点，汇总快系统与垂域信息，并进行迭代推理。", type: "slow logic" },
-      { id: "result", label: "结果", fields: ["DispalyText"], note: "最终展示结果。", type: "result" }
+      { id: "unillm", label: "UniLLM", fields: ["模型问题"], note: "慢系统统一推理节点，汇总快系统与垂域信息，并进行迭代推理。", type: "slow logic" },
+      { id: "result", label: "结果", fields: ["出错原文"], note: "最终展示结果。", type: "result" }
     ];
 
     const FLOW_NODE_MAP = Object.fromEntries(FLOW_NODES.map(node => [node.id, node]));
@@ -1462,7 +1508,21 @@
             escapeNext = true;
             continue;
           }
-          if (char === quote) return value.trim();
+          if (char === quote) {
+            // Look ahead past any spaces to find the next meaningful character.
+            // Only treat this as the true closing quote when the next token is
+            // a field separator (,), object close (}), end of input, or a
+            // newline — i.e. there is nothing more belonging to this value.
+            let ahead = index + 1;
+            while (ahead < raw.length && raw[ahead] === " ") ahead++;
+            const next = ahead < raw.length ? raw[ahead] : "";
+            if (!next || next === "," || next === "}" || next === "\n" || next === "\r") {
+              return value.trim();
+            }
+            // The quote is embedded inside the value (e.g. 声称'官方…) — keep it.
+            value += char;
+            continue;
+          }
           value += char;
         }
         return value.trim();
@@ -1756,28 +1816,51 @@
 
     function renderStats() {
       const rows = state.rows;
-      const fields = ["评测结果", "相关性", "正确性", "信息量", "通顺性"];
-      const cards = [
-        { label: "总行数", value: rows.length },
-        { label: "字段数", value: state.headers.length },
-        { label: "默认关键字段命中", value: DEFAULT_COLUMNS.filter(col => state.headers.includes(col)).length },
-        { label: "有结果内容行", value: rows.filter(row => hasValue(row, "DispalyText")).length }
+      const total = rows.length;
+      const WRONG_FIELDS = [
+        "intent", "queryUnstandingRouterType", "webSearch",
+        "垂域.md", "网页知识", "运营话术", "知识库", "模型问题"
       ];
 
-      const fieldSummary = fields
+      const chartData = WRONG_FIELDS
         .filter(field => state.headers.includes(field))
         .map(field => {
-          const nonEmpty = rows.filter(row => hasValue(row, field)).length;
-          return `<div class="stat-card"><div class="stat-label">${escapeHtml(field)}非空</div><div class="stat-value">${nonEmpty}</div></div>`;
+          const wrongCount = rows.filter(row => fieldDisplayData(row, field).isWrong).length;
+          const pct = total > 0 ? (wrongCount / total * 100).toFixed(1) : "0.0";
+          return { field, wrongCount, pct };
         })
-        .join("");
+        .sort((a, b) => b.wrongCount - a.wrongCount);
 
-      els.statsArea.innerHTML = cards.map(card => `
-        <div class="stat-card">
-          <div class="stat-label">${escapeHtml(card.label)}</div>
-          <div class="stat-value">${escapeHtml(card.value)}</div>
-        </div>
-      `).join("") + fieldSummary;
+      if (!chartData.length || total === 0) {
+        els.statsArea.innerHTML = `<div class="chart-panel"><p style="color:var(--muted);font-size:13px;margin:0;">暂无 is_wrong 统计数据。</p></div>`;
+        return;
+      }
+
+      const maxCount = Math.max(...chartData.map(d => d.wrongCount), 1);
+
+      els.statsArea.innerHTML = `
+        <div class="chart-panel">
+          <div class="chart-header">
+            <strong>错误根因分布统计</strong>
+            <span class="chart-total">总行数：${total}</span>
+          </div>
+          <div class="chart-body">
+            ${chartData.map(d => {
+              const barWidth = d.wrongCount > 0 ? (d.wrongCount / maxCount * 100).toFixed(1) : 0;
+              const isZero = d.wrongCount === 0;
+              return `
+                <div class="chart-row">
+                  <div class="chart-label" title="${escapeHtml(d.field)}">${escapeHtml(d.field)}</div>
+                  <div class="chart-track">
+                    <div class="chart-bar${isZero ? " zero" : ""}" style="width:${barWidth}%"></div>
+                  </div>
+                  <div class="chart-meta">
+                    ${d.wrongCount} / ${total}<span class="chart-pct${isZero ? " zero" : ""}">${d.pct}%</span>
+                  </div>
+                </div>`;
+            }).join("")}
+          </div>
+        </div>`;
     }
 
     function renderTable() {
@@ -1844,7 +1927,7 @@
       const value = data.content;
       const display = shortText(value, 20);
       const cls = getTagClass(col, value);
-      const useTag = ["评测结果", "相关性", "正确性", "信息量", "通顺性"].includes(col) && value;
+      const useTag = ["评测结果", "相关性", "正确性", "信息量"].includes(col) && value;
       if (useTag) {
         return `<td title="${escapeHtml(value)}"><span class="tag ${cls}">${escapeHtml(display)}</span></td>`;
       }
