@@ -2487,13 +2487,11 @@
     });
 
     // ── Export: embed current data into a self-contained HTML ──
-    async function exportHtml() {
+    function exportHtml() {
       if (!state.rows.length) { showToast("请先导入数据"); return; }
-      showToast("正在生成导出文件…");
       try {
-        const resp = await fetch(location.href);
-        if (!resp.ok) throw new Error("fetch failed");
-        let html = await resp.text();
+        // Read directly from DOM — works on file:// and HTTP alike, no fetch needed
+        let html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 
         // Inject embedded data before </head>
         const payload = JSON.stringify({ fileName: state.fileName, headers: state.headers, rows: state.rows });
@@ -2512,7 +2510,7 @@
         showToast("导出成功：" + a.download);
       } catch (err) {
         console.error(err);
-        showToast("导出失败：请通过 HTTP 服务器打开本文件后重试");
+        showToast("导出失败：" + err.message);
       }
     }
 
