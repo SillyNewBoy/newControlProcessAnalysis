@@ -347,6 +347,81 @@
       color: #94a3b8;
     }
 
+    /* ── root-cause breakdown (under each field bar) ── */
+    .chart-row-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .rc-section {
+      /* indent to align with the bar track */
+      padding: 6px 8px 8px calc(200px + 12px + 8px);
+      margin: 0 -8px 6px;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+
+    .rc-section:last-child {
+      border-bottom: none;
+    }
+
+    .rc-stacked-bar {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #f1f5f9;
+      margin-bottom: 8px;
+    }
+
+    .rc-segment {
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    .rc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .rc-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 2px 9px 2px 6px;
+      white-space: nowrap;
+    }
+
+    .rc-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .rc-tag b {
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .rc-tag-pct {
+      font-weight: 700;
+      margin-left: 1px;
+      opacity: 0.75;
+    }
+
+    .rc-empty-hint {
+      font-size: 12px;
+      color: #94a3b8;
+      font-style: italic;
+    }
+
     .table-card {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -1493,14 +1568,15 @@
     }
 
     function parseLooseNodeData(raw) {
-      const hasNodeKeys = /\b(?:is_wrong|is_time_out|is_empty|reason|content)\b/i.test(raw);
+      const hasNodeKeys = /\b(?:is_wrong|is_time_out|is_empty|reason|content|root_cause)\b/i.test(raw);
       if (!hasNodeKeys) return null;
       const result = {
         is_wrong: readLooseField(raw, "is_wrong"),
         is_time_out: readLooseField(raw, "is_time_out"),
         is_empty: readLooseField(raw, "is_empty"),
         reason: readLooseField(raw, "reason"),
-        content: readLooseField(raw, "content")
+        content: readLooseField(raw, "content"),
+        root_cause: readLooseField(raw, "root_cause")
       };
       const hasAnyValue = Object.values(result).some(value => value !== undefined);
       return hasAnyValue ? result : null;
@@ -1623,10 +1699,12 @@
 
       const content = valueToText(parsed.content);
       const reason = valueToText(parsed.reason);
+      const rootCause = valueToText(parsed.root_cause);
       return {
         raw,
         content,
         reason,
+        rootCause,
         isWrong: parseBooleanLike(parsed.is_wrong),
         isTimeOut: parseBooleanLike(parsed.is_time_out),
         isEmpty: parseBooleanLike(parsed.is_empty),
@@ -1850,13 +1928,45 @@
         "intent", "queryUnstandingRouterType", "webSearch",
         "垂域.md", "网页知识", "运营话术", "知识库", "模型问题"
       ];
+      // Color palette cycling for root causes (non-red, distinct)
+      const RC_COLORS = [
+        "#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b",
+        "#10b981", "#f97316", "#ec4899", "#6366f1"
+      ];
 
       const chartData = WRONG_FIELDS
         .filter(field => state.headers.includes(field))
         .map(field => {
-          const wrongCount = rows.filter(row => fieldDisplayData(row, field).isWrong).length;
+          // Compute display data once per row to avoid duplicate parsing
+          const fieldDataCache = rows.map(row => fieldDisplayData(row, field));
+          const wrongRows = fieldDataCache.filter(d => d.isWrong);
+          const wrongCount = wrongRows.length;
           const pct = total > 0 ? (wrongCount / total * 100).toFixed(1) : "0.0";
-          return { field, wrongCount, pct };
+
+          // Group wrong rows by root_cause
+          const rcMap = new Map();
+          wrongRows.forEach(d => {
+            const rc = d.rootCause && d.rootCause.trim() ? d.rootCause.trim() : "";
+            rcMap.set(rc, (rcMap.get(rc) || 0) + 1);
+          });
+
+          // Separate named causes from unnamed
+          const namedCauses = [];
+          let unnamedCount = 0;
+          rcMap.forEach((count, label) => {
+            if (label) namedCauses.push({ label, count });
+            else unnamedCount += count;
+          });
+          namedCauses.sort((a, b) => b.count - a.count);
+          if (unnamedCount > 0) namedCauses.push({ label: "（未填写）", count: unnamedCount });
+
+          const rootCauses = namedCauses.map((rc, i) => ({
+            ...rc,
+            pct: wrongCount > 0 ? (rc.count / wrongCount * 100).toFixed(1) : "0.0",
+            color: RC_COLORS[i % RC_COLORS.length]
+          }));
+
+          return { field, wrongCount, pct, rootCauses };
         })
         .sort((a, b) => b.wrongCount - a.wrongCount);
 
@@ -1866,27 +1976,67 @@
       }
 
       const maxCount = Math.max(...chartData.map(d => d.wrongCount), 1);
+      // Total wrong count across all fields (for header summary)
+      const totalWrongRows = new Set(
+        state.rows.flatMap((row, i) =>
+          chartData.some(d => fieldDisplayData(row, d.field).isWrong) ? [i] : []
+        )
+      ).size;
 
       els.statsArea.innerHTML = `
         <div class="chart-panel">
           <div class="chart-header">
             <strong>错误根因分布统计</strong>
-            <span class="chart-total">总行数：${total}${state.isWrongFilter ? `　<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} · 点击同行可取消</span>` : ""}</span>
+            <span class="chart-total">
+              总行数：${total}
+              　<span style="color:#ef4444;font-weight:700;">${totalWrongRows}</span> 行含错误
+              （<span style="color:#ef4444;font-weight:700;">${total > 0 ? (totalWrongRows / total * 100).toFixed(1) : "0.0"}%</span>）
+              ${state.isWrongFilter ? `　<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} · 点击同行可取消</span>` : ""}
+            </span>
           </div>
           <div class="chart-body">
             ${chartData.map(d => {
               const barWidth = d.wrongCount > 0 ? (d.wrongCount / maxCount * 100).toFixed(1) : 0;
               const isZero = d.wrongCount === 0;
               const isActive = state.isWrongFilter === d.field;
+              const hasRcData = d.rootCauses.some(rc => rc.label !== "（未填写）");
+
+              // Stacked bar segments for root causes
+              const stackedSegments = d.wrongCount > 0
+                ? d.rootCauses.map(rc =>
+                    `<div class="rc-segment" style="width:${rc.pct}%;background:${rc.color};" title="${escapeHtml(rc.label)}：${rc.count} 条（${rc.pct}%）"></div>`
+                  ).join("")
+                : "";
+
+              // Pill tags for root causes
+              const rcTags = d.wrongCount > 0
+                ? (hasRcData
+                    ? d.rootCauses.map(rc =>
+                        `<span class="rc-tag">
+                          <span class="rc-dot" style="background:${rc.color};"></span>
+                          ${escapeHtml(rc.label)}
+                          <b>${rc.count}</b><span class="rc-tag-pct" style="color:${rc.color};">${rc.pct}%</span>
+                        </span>`
+                      ).join("")
+                    : `<span class="rc-empty-hint">暂无 root_cause 数据</span>`)
+                : "";
+
               return `
-                <div class="chart-row${isActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" title="点击筛选该字段 is_wrong 数据">
-                  <div class="chart-label">${escapeHtml(d.field)}</div>
-                  <div class="chart-track">
-                    <div class="chart-bar${isZero ? " zero" : ""}" style="width:${barWidth}%"></div>
+                <div class="chart-row-wrap">
+                  <div class="chart-row${isActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" title="点击筛选该字段 is_wrong 数据">
+                    <div class="chart-label">${escapeHtml(d.field)}</div>
+                    <div class="chart-track">
+                      <div class="chart-bar${isZero ? " zero" : ""}" style="width:${barWidth}%"></div>
+                    </div>
+                    <div class="chart-meta">
+                      ${d.wrongCount} / ${total}<span class="chart-pct${isZero ? " zero" : ""}">${d.pct}%</span>
+                    </div>
                   </div>
-                  <div class="chart-meta">
-                    ${d.wrongCount} / ${total}<span class="chart-pct${isZero ? " zero" : ""}">${d.pct}%</span>
-                  </div>
+                  ${d.wrongCount > 0 ? `
+                  <div class="rc-section">
+                    <div class="rc-stacked-bar">${stackedSegments}</div>
+                    <div class="rc-tags">${rcTags}</div>
+                  </div>` : ""}
                 </div>`;
             }).join("")}
           </div>
