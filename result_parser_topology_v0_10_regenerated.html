@@ -1230,7 +1230,7 @@
         </div>
       </div>
       <div class="file-import">
-        <label for="fileInput" class="btn">打开本地 Excel</label>
+        <label for="fileInput" class="btn">导入本地 Excel</label>
         <input id="fileInput" type="file" accept=".xlsx,.xls,.xlsm" />
         <button id="exportBtn" class="btn secondary" type="button" style="display:none;">导出 HTML</button>
         <button id="clearBtn" class="btn secondary" type="button">清空当前数据</button>
@@ -1861,19 +1861,48 @@
           if (!firstSheetName) throw new Error("Excel 内没有可解析的工作表");
 
           const sheet = workbook.Sheets[firstSheetName];
-          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
-          const headers = collectHeaders(rows);
+          const newRows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
+          const newHeaders = collectHeaders(newRows);
 
-          state.fileName = file.name;
-          state.headers = headers;
-          state.rows = rows;
-          state.visibleColumns = DEFAULT_COLUMNS.filter(col => headers.includes(col));
-          state.searchKeyword = "";
-          state.columnFilters = {};
-          els.searchInput.value = "";
+          // Reset file input immediately so same file can be re-selected later
+          els.fileInput.value = "";
+
+          const isFirstImport = state.rows.length === 0;
+
+          if (isFirstImport) {
+            // First import: initialize everything from scratch
+            state.fileName = file.name;
+            state.headers = newHeaders;
+            state.rows = newRows;
+            state.visibleColumns = DEFAULT_COLUMNS.filter(col => newHeaders.includes(col));
+            state.searchKeyword = "";
+            state.columnFilters = {};
+            state.isWrongFilter = null;
+            state.rootCauseFilter = null;
+            els.searchInput.value = "";
+          } else {
+            // Subsequent imports: merge headers and append rows
+            const existingHeaderSet = new Set(state.headers);
+            const mergedHeaders = [...state.headers];
+            newHeaders.forEach(h => {
+              if (!existingHeaderSet.has(h)) mergedHeaders.push(h);
+            });
+            // Add any new DEFAULT_COLUMNS that appear in the new file
+            const newDefaultCols = DEFAULT_COLUMNS.filter(
+              col => newHeaders.includes(col) && !state.visibleColumns.includes(col)
+            );
+
+            state.fileName = state.fileName + " + " + file.name;
+            state.headers = mergedHeaders;
+            state.rows = [...state.rows, ...newRows];
+            state.visibleColumns = [...state.visibleColumns, ...newDefaultCols];
+          }
 
           renderAll();
-          showToast(`导入成功：${file.name}`);
+          const hint = isFirstImport
+            ? `导入成功：${file.name}（${newRows.length} 行）`
+            : `追加成功：${file.name}（+${newRows.length} 行，共 ${state.rows.length} 行）`;
+          showToast(hint);
         } catch (error) {
           console.error(error);
           showToast("解析失败，请确认文件是有效 Excel 表格");
