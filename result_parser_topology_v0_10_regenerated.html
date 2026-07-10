@@ -396,6 +396,24 @@
       border-radius: 20px;
       padding: 2px 9px 2px 6px;
       white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+    }
+
+    .rc-tag:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .rc-tag.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .rc-tag.active .rc-tag-pct {
+      opacity: 1;
     }
 
     .rc-dot {
@@ -1214,6 +1232,7 @@
       <div class="file-import">
         <label for="fileInput" class="btn">打开本地 Excel</label>
         <input id="fileInput" type="file" accept=".xlsx,.xls,.xlsm" />
+        <button id="exportBtn" class="btn secondary" type="button" style="display:none;">导出 HTML</button>
         <button id="clearBtn" class="btn secondary" type="button">清空当前数据</button>
       </div>
     </header>
@@ -1445,7 +1464,8 @@
       activeNodeId: null,
       searchKeyword: "",
       columnFilters: {},
-      isWrongFilter: null
+      isWrongFilter: null,
+      rootCauseFilter: null   // { field, rootCause } | null
     };
 
     const els = {
@@ -1473,7 +1493,8 @@
       nodeReasonContent: document.getElementById("nodeReasonContent"),
       nodeValueContent: document.getElementById("nodeValueContent"),
       copyValueBtn: document.getElementById("copyValueBtn"),
-      toast: document.getElementById("toast")
+      toast: document.getElementById("toast"),
+      exportBtn: document.getElementById("exportBtn")
     };
 
     function normalizeHeader(header) {
@@ -1806,8 +1827,11 @@
       state.activeNodeId = null;
       state.searchKeyword = "";
       state.columnFilters = {};
+      state.isWrongFilter = null;
+      state.rootCauseFilter = null;
       els.searchInput.value = "";
       els.fileInput.value = "";
+      els.exportBtn.style.display = "none";
       els.tableCard.classList.add("hidden");
       els.statsArea.classList.add("hidden");
       els.emptyCard.classList.remove("hidden");
@@ -1882,6 +1906,15 @@
       return state.rows.filter(row => {
         if (state.isWrongFilter && !fieldDisplayData(row, state.isWrongFilter).isWrong) return false;
 
+        // Root-cause filter: must be wrong in that field AND have matching root_cause
+        if (state.rootCauseFilter) {
+          const { field, rootCause } = state.rootCauseFilter;
+          const disp = fieldDisplayData(row, field);
+          if (!disp.isWrong) return false;
+          const rc = disp.rootCause && disp.rootCause.trim() ? disp.rootCause.trim() : "";
+          if (rc !== rootCause) return false;
+        }
+
         const globalMatched = !keyword || state.headers.some(field => {
           const raw = String(row[field] ?? "").toLowerCase();
           const display = fieldDisplayData(row, field).content.toLowerCase();
@@ -1901,6 +1934,7 @@
       state.searchKeyword = "";
       state.columnFilters = {};
       state.isWrongFilter = null;
+      state.rootCauseFilter = null;
       els.searchInput.value = "";
       renderStats();
       renderTable();
@@ -1915,6 +1949,7 @@
       els.emptyCard.classList.add("hidden");
       els.tableCard.classList.remove("hidden");
       els.statsArea.classList.remove("hidden");
+      els.exportBtn.style.display = "";
       els.tableTitle.textContent = `解析结果：${state.fileName}`;
       renderStats();
       renderTable();
@@ -1991,7 +2026,8 @@
               总行数：${total}
               　<span style="color:#ef4444;font-weight:700;">${totalWrongRows}</span> 行含错误
               （<span style="color:#ef4444;font-weight:700;">${total > 0 ? (totalWrongRows / total * 100).toFixed(1) : "0.0"}%</span>）
-              ${state.isWrongFilter ? `　<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} · 点击同行可取消</span>` : ""}
+              ${state.isWrongFilter ? `　<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} is_wrong · 点击同行可取消</span>` : ""}
+              ${state.rootCauseFilter ? `　<span class="chart-filter-tip">根因筛选：${escapeHtml(state.rootCauseFilter.field)} / ${escapeHtml(state.rootCauseFilter.rootCause || "（未填写）")} · 点击同标签可取消</span>` : ""}
             </span>
           </div>
           <div class="chart-body">
@@ -2008,16 +2044,20 @@
                   ).join("")
                 : "";
 
-              // Pill tags for root causes
+              // Pill tags for root causes (with data attrs for click-filter)
               const rcTags = d.wrongCount > 0
                 ? (hasRcData
-                    ? d.rootCauses.map(rc =>
-                        `<span class="rc-tag">
-                          <span class="rc-dot" style="background:${rc.color};"></span>
+                    ? d.rootCauses.map(rc => {
+                        const rcKey = rc.label === "（未填写）" ? "" : rc.label;
+                        const isRcActive = state.rootCauseFilter &&
+                          state.rootCauseFilter.field === d.field &&
+                          state.rootCauseFilter.rootCause === rcKey;
+                        return `<span class="rc-tag${isRcActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" data-rc="${escapeHtml(rcKey)}" title="点击筛选该根因语料">
+                          <span class="rc-dot" style="background:${isRcActive ? "var(--primary)" : rc.color};"></span>
                           ${escapeHtml(rc.label)}
-                          <b>${rc.count}</b><span class="rc-tag-pct" style="color:${rc.color};">${rc.pct}%</span>
-                        </span>`
-                      ).join("")
+                          <b>${rc.count}</b><span class="rc-tag-pct" style="color:${isRcActive ? "var(--primary)" : rc.color};">${rc.pct}%</span>
+                        </span>`;
+                      }).join("")
                     : `<span class="rc-empty-hint">暂无 root_cause 数据</span>`)
                 : "";
 
@@ -2046,6 +2086,7 @@
         row.addEventListener("click", () => {
           const field = row.dataset.field;
           state.isWrongFilter = state.isWrongFilter === field ? null : field;
+          state.rootCauseFilter = null; // 点总条时清除根因筛选，两者互斥
           renderStats();
           renderTable();
           if (state.isWrongFilter) {
@@ -2053,6 +2094,25 @@
           } else {
             showToast("已取消 is_wrong 筛选");
           }
+        });
+      });
+
+      // Root-cause tag click: filter table by field + specific root_cause
+      [...els.statsArea.querySelectorAll(".rc-tag[data-field]")].forEach(tag => {
+        tag.addEventListener("click", event => {
+          event.stopPropagation(); // don't bubble to parent .chart-row
+          const field = tag.dataset.field;
+          const rc = tag.dataset.rc; // "" for 未填写, else the cause string
+          const isSame = state.rootCauseFilter &&
+            state.rootCauseFilter.field === field &&
+            state.rootCauseFilter.rootCause === rc;
+          state.isWrongFilter = null; // 点根因tag时清除总条筛选，两者互斥
+          state.rootCauseFilter = isSame ? null : { field, rootCause: rc };
+          renderStats();
+          renderTable();
+          showToast(state.rootCauseFilter
+            ? `根因筛选：${field} / ${rc || "（未填写）"}`
+            : "已取消根因筛选");
         });
       });
     }
@@ -2425,6 +2485,51 @@
         });
       }
     });
+
+    // ── Export: embed current data into a self-contained HTML ──
+    async function exportHtml() {
+      if (!state.rows.length) { showToast("请先导入数据"); return; }
+      showToast("正在生成导出文件…");
+      try {
+        const resp = await fetch(location.href);
+        if (!resp.ok) throw new Error("fetch failed");
+        let html = await resp.text();
+
+        // Inject embedded data before </head>
+        const payload = JSON.stringify({ fileName: state.fileName, headers: state.headers, rows: state.rows });
+        const dataTag = `\n<script id="__embedded_data__">window.__EMBEDDED_DATA__=${payload};<\/script>`;
+        html = html.replace("</head>", dataTag + "\n</head>");
+
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = (state.fileName.replace(/\.[^.]+$/, "") || "export") + "_exported.html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("导出成功：" + a.download);
+      } catch (err) {
+        console.error(err);
+        showToast("导出失败：请通过 HTTP 服务器打开本文件后重试");
+      }
+    }
+
+    els.exportBtn.addEventListener("click", exportHtml);
+
+    // ── Auto-load embedded data (runs when this is an exported HTML) ──
+    if (typeof window.__EMBEDDED_DATA__ !== "undefined") {
+      const _d = window.__EMBEDDED_DATA__;
+      state.fileName = _d.fileName || "(嵌入数据)";
+      state.headers  = _d.headers  || [];
+      state.rows     = _d.rows     || [];
+      state.visibleColumns = DEFAULT_COLUMNS.filter(col => state.headers.includes(col));
+      state.searchKeyword  = "";
+      state.columnFilters  = {};
+      renderAll();
+      showToast("已加载嵌入数据：" + state.fileName);
+    }
 
   </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
