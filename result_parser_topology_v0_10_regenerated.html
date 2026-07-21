@@ -236,6 +236,161 @@
       max-width: 100%;
     }
 
+    .overlap-analysis {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .overlap-card {
+      min-width: 0;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .overlap-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .overlap-card-head h2 {
+      margin: 0;
+      color: #1e293b;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .overlap-card-head span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .overlap-column-chart {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: end;
+      gap: 16px;
+      min-height: 176px;
+      padding: 4px 8px 0;
+    }
+
+    .overlap-column {
+      display: grid;
+      grid-template-rows: auto 112px auto;
+      align-items: end;
+      min-width: 0;
+      gap: 6px;
+    }
+
+    .overlap-column-value {
+      color: var(--overlap-color);
+      font-size: 16px;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .overlap-column-track {
+      display: flex;
+      align-items: flex-end;
+      height: 112px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px 6px 3px 3px;
+      background: repeating-linear-gradient(
+        to top,
+        #f8fafc 0,
+        #f8fafc 27px,
+        #e2e8f0 28px
+      );
+    }
+
+    .overlap-column-bar {
+      width: 100%;
+      min-height: 0;
+      border-radius: 4px 4px 0 0;
+      background: var(--overlap-color);
+      transition: height 0.35s ease;
+    }
+
+    .overlap-column-label {
+      color: #475569;
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .overlap-horizontal-chart {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 176px;
+      gap: 14px;
+      padding: 4px 0 0;
+    }
+
+    .overlap-combo-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 34px;
+      align-items: center;
+      gap: 6px 10px;
+      min-width: 0;
+    }
+
+    .overlap-combo-label {
+      color: #334155;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .overlap-combo-track {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      height: 18px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: #f1f5f9;
+    }
+
+    .overlap-combo-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--overlap-color);
+      transition: width 0.35s ease;
+    }
+
+    .overlap-combo-value {
+      grid-column: 2;
+      grid-row: 1;
+      color: var(--overlap-color);
+      font-size: 13px;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .overlap-empty {
+      display: grid;
+      min-height: 176px;
+      place-items: center;
+      border: 1px dashed #cbd5e1;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
     /* ── chart area ── */
     .chart-area {
       min-width: 0;
@@ -426,7 +581,7 @@
     .chart-track {
       height: 32px;
       overflow: hidden;
-      border: 1px solid #e2e8f0;
+      border: 1px solid color-mix(in srgb, var(--field-color) 28%, #e2e8f0);
       border-radius: 6px;
       background: #f1f5f9;
       box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -450,7 +605,7 @@
       height: 100%;
       padding: 0;
       border: 0;
-      border-right: 2px solid rgba(255, 255, 255, 0.9);
+      border-right: 3px solid rgba(255, 255, 255, 0.96);
       cursor: pointer;
       transition: filter 0.15s ease, opacity 0.15s ease;
     }
@@ -1309,7 +1464,8 @@
       }
 
       .intro-grid,
-      .stats {
+      .stats,
+      .overlap-analysis {
         grid-template-columns: 1fr;
       }
 
@@ -1397,6 +1553,7 @@
         max-width: min(240px, 45vw);
       }
     }
+
   </style>
 </head>
 <body>
@@ -2172,23 +2329,26 @@
         "intent", "queryUnstandingRouterType", "webSearch",
         "垂域.md", "网页知识", "运营话术", "知识库", "模型问题"
       ];
-      // Keep each problem item's color family stable while using darker tones for its causes.
+      // Parent colors identify problem items; child colors are deliberately high-contrast.
       const FIELD_PALETTES = [
-        { main: "#1d4ed8", causes: ["#1d4ed8", "#0369a1", "#0f766e", "#4338ca"] },
-        { main: "#6d28d9", causes: ["#6d28d9", "#4338ca", "#7e22ce", "#1d4ed8"] },
-        { main: "#0f766e", causes: ["#0f766e", "#047857", "#0369a1", "#166534"] },
-        { main: "#b45309", causes: ["#b45309", "#c2410c", "#a16207", "#9a3412"] },
-        { main: "#be123c", causes: ["#be123c", "#9f1239", "#a21caf", "#7e22ce"] },
-        { main: "#047857", causes: ["#047857", "#15803d", "#3f6212", "#166534"] },
-        { main: "#c2410c", causes: ["#c2410c", "#b45309", "#be123c", "#9a3412"] },
-        { main: "#4338ca", causes: ["#4338ca", "#6d28d9", "#1d4ed8", "#3730a3"] }
+        { main: "#2563eb", causes: ["#2563eb", "#0f766e", "#b45309", "#7c3aed"] },
+        { main: "#c2410c", causes: ["#c2410c", "#1d4ed8", "#15803d", "#a21caf"] },
+        { main: "#15803d", causes: ["#15803d", "#b45309", "#0284c7", "#be123c"] },
+        { main: "#dc2626", causes: ["#dc2626", "#6d28d9", "#0f766e", "#a16207"] },
+        { main: "#7c3aed", causes: ["#7c3aed", "#be123c", "#0369a1", "#3f6212"] },
+        { main: "#0f766e", causes: ["#0f766e", "#c2410c", "#4338ca", "#be123c"] },
+        { main: "#a16207", causes: ["#a16207", "#047857", "#6d28d9", "#1d4ed8"] },
+        { main: "#475569", causes: ["#475569", "#b91c1c", "#0e7490", "#4d7c0f"] }
       ];
+      const availableWrongFields = WRONG_FIELDS.filter(field => state.headers.includes(field));
+      const fieldDisplayCache = new Map(
+        availableWrongFields.map(field => [field, rows.map(row => fieldDisplayData(row, field))])
+      );
 
-      const chartData = WRONG_FIELDS
-        .filter(field => state.headers.includes(field))
+      const chartData = availableWrongFields
         .map((field, fieldIndex) => {
           const fieldPalette = FIELD_PALETTES[fieldIndex % FIELD_PALETTES.length];
-          const fieldDataCache = rows.map(row => fieldDisplayData(row, field));
+          const fieldDataCache = fieldDisplayCache.get(field);
           const wrongRows = fieldDataCache.filter(d => d.isWrong);
           const wrongCount = wrongRows.length;
           const rowPct = total > 0 ? (wrongCount / total * 100).toFixed(1) : "0.0";
@@ -2216,6 +2376,7 @@
 
           return { field, wrongCount, rowPct, rootCauses, color: fieldPalette.main };
         })
+        .filter(item => item.wrongCount > 0)
         .sort((a, b) => b.wrongCount - a.wrongCount);
 
       if (!chartData.length || total === 0) {
@@ -2238,11 +2399,75 @@
 
       const totalWrongRows = new Set(
         state.rows.flatMap((row, i) =>
-          chartData.some(d => fieldDisplayData(row, d.field).isWrong) ? [i] : []
+          chartData.some(d => fieldDisplayCache.get(d.field)[i].isWrong) ? [i] : []
         )
       ).size;
 
+      const overlapStats = [
+        { label: "单一根因", count: 0, color: "#2563eb" },
+        { label: "双重叠加", count: 0, color: "#d97706" },
+        { label: "三重及以上", count: 0, color: "#7c3aed" }
+      ];
+      const combinationCounts = new Map();
+
+      rows.forEach((row, rowIndex) => {
+        const wrongFields = availableWrongFields.filter(field => fieldDisplayCache.get(field)[rowIndex].isWrong);
+        if (wrongFields.length === 1) {
+          overlapStats[0].count += 1;
+        } else if (wrongFields.length === 2) {
+          overlapStats[1].count += 1;
+        } else if (wrongFields.length >= 3) {
+          overlapStats[2].count += 1;
+        }
+
+        if (wrongFields.length >= 2) {
+          const combination = wrongFields.join("+");
+          combinationCounts.set(combination, (combinationCounts.get(combination) || 0) + 1);
+        }
+      });
+
+      const overlapMax = Math.max(...overlapStats.map(item => item.count), 1);
+      const topCombinations = [...combinationCounts.entries()]
+        .map(([label, count]) => ({ label, count }))
+        .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "zh-CN"))
+        .slice(0, 3);
+      const topCombinationMax = Math.max(...topCombinations.map(item => item.count), 1);
+      const combinationColors = ["#2563eb", "#0f766e", "#7c3aed"];
+      const overlapColumns = overlapStats.map(item => {
+        const height = item.count > 0 ? (item.count / overlapMax * 100).toFixed(1) : 0;
+        return `<div class="overlap-column" style="--overlap-color:${item.color};" aria-label="${item.label}：${item.count} 例">
+          <span class="overlap-column-value">${item.count}</span>
+          <div class="overlap-column-track"><div class="overlap-column-bar" style="height:${height}%;"></div></div>
+          <span class="overlap-column-label">${item.label}</span>
+        </div>`;
+      }).join("");
+      const overlapCombinationRows = topCombinations.length
+        ? topCombinations.map((item, index) => {
+            const color = combinationColors[index % combinationColors.length];
+            const width = (item.count / topCombinationMax * 100).toFixed(1);
+            return `<div class="overlap-combo-row" style="--overlap-color:${color};" aria-label="${escapeHtml(item.label)}：${item.count} 例">
+              <span class="overlap-combo-label" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+              <div class="overlap-combo-track"><div class="overlap-combo-bar" style="width:${width}%;"></div></div>
+              <span class="overlap-combo-value">${item.count}</span>
+            </div>`;
+          }).join("")
+        : `<div class="overlap-empty">暂无双重及以上缺陷组合</div>`;
+
       els.statsArea.innerHTML = `
+        <section class="overlap-analysis" aria-label="多缺陷叠加分析">
+          <article class="overlap-card">
+            <div class="overlap-card-head">
+              <h2>根因叠加数量分布（单位：例）</h2>
+            </div>
+            <div class="overlap-column-chart">${overlapColumns}</div>
+          </article>
+          <article class="overlap-card">
+            <div class="overlap-card-head">
+              <h2>高频复合根因组合 TOP 3（单位：例）</h2>
+            </div>
+            <div class="overlap-horizontal-chart">${overlapCombinationRows}</div>
+          </article>
+        </section>
         <div class="chart-panel">
           <div class="chart-header">
             <div class="chart-heading">
