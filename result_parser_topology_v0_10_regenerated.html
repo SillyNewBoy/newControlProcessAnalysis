@@ -253,130 +253,247 @@
     .chart-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 20px;
       margin-bottom: 16px;
     }
 
-    .chart-header strong {
-      font-size: 14px;
+    .chart-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .chart-heading strong {
+      font-size: 15px;
+    }
+
+    .chart-caption {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
     }
 
     .chart-total {
-      font-size: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+      font-size: 12px;
       color: var(--muted);
+    }
+
+    .chart-summary-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      padding: 5px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #f8fafc;
+      white-space: nowrap;
+    }
+
+    .chart-summary-item b {
+      color: #1e293b;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chart-summary-item.alert b {
+      color: #dc2626;
+    }
+
+    .chart-filter-tip {
+      width: 100%;
+      color: #dc2626;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .chart-column-head {
+      display: grid;
+      grid-template-columns: 220px minmax(260px, 1fr) 150px;
+      align-items: center;
+      gap: 14px;
+      padding: 0 8px 8px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .chart-column-head span:last-child {
+      text-align: right;
     }
 
     .chart-body {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .chart-row-wrap {
+      --field-color: #2563eb;
+      padding: 12px 8px 11px;
+      border-bottom: 1px solid #eef2f7;
+      border-radius: 6px;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .chart-row-wrap:last-child {
+      border-bottom: none;
+    }
+
+    .chart-row-wrap:hover {
+      background: #f8fafc;
+    }
+
+    .chart-row-wrap.active {
+      background: #eff6ff;
+      box-shadow: inset 3px 0 0 var(--field-color);
     }
 
     .chart-row {
       display: grid;
-      grid-template-columns: 200px 1fr 110px;
+      grid-template-columns: 220px minmax(260px, 1fr) 150px;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .chart-field-trigger {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
       cursor: pointer;
-      border-radius: 8px;
-      padding: 4px 8px;
-      margin: 0 -8px;
-      transition: background 0.15s;
     }
 
-    .chart-row:hover {
-      background: #f1f5f9;
+    .chart-field-trigger:focus-visible,
+    .rc-filter:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.28);
+      outline-offset: 2px;
     }
 
-    .chart-row.active {
-      background: #fef2f2;
+    .chart-rank {
+      width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid color-mix(in srgb, var(--field-color) 35%, white);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--field-color) 10%, white);
+      color: var(--field-color);
+      font-size: 11px;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
     }
 
-    .chart-row.active .chart-label {
-      color: #ef4444;
-      font-weight: 700;
-    }
-
-    .chart-filter-tip {
-      font-size: 12px;
-      color: #ef4444;
-      font-weight: 600;
+    .chart-label-copy {
+      min-width: 0;
     }
 
     .chart-label {
-      font-size: 13px;
-      color: #334155;
+      display: block;
       overflow: hidden;
+      color: #1e293b;
+      font-size: 13px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chart-submeta {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: #64748b;
+      font-size: 11px;
+      line-height: 1.35;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .chart-track {
-      background: #f1f5f9;
-      border-radius: 6px;
-      height: 22px;
+      height: 32px;
       overflow: hidden;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #f1f5f9;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
     }
 
-    .chart-bar {
+    .chart-composition {
+      display: flex;
       height: 100%;
-      background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
-      border-radius: 6px;
       min-width: 0;
+      overflow: hidden;
+      border-radius: 5px;
       transition: width 0.35s ease;
     }
 
-    .chart-bar.zero {
-      background: #e2e8f0;
-    }
-
-    .chart-meta {
-      font-size: 12px;
-      color: #64748b;
-      white-space: nowrap;
-      text-align: right;
-    }
-
-    .chart-pct {
-      font-weight: 700;
-      color: #ef4444;
-      margin-left: 4px;
-    }
-
-    .chart-pct.zero {
-      color: #94a3b8;
-    }
-
-    /* ── root-cause breakdown (under each field bar) ── */
-    .chart-row-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .rc-section {
-      /* indent to align with the bar track */
-      padding: 6px 8px 8px calc(200px + 12px + 8px);
-      margin: 0 -8px 6px;
-      border-bottom: 1px dashed #e5e7eb;
-    }
-
-    .rc-section:last-child {
-      border-bottom: none;
-    }
-
-    .rc-stacked-bar {
-      display: flex;
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #f1f5f9;
-      margin-bottom: 8px;
+    .chart-composition.zero {
+      width: 0 !important;
     }
 
     .rc-segment {
+      min-width: 0;
       height: 100%;
-      transition: width 0.35s ease;
+      padding: 0;
+      border: 0;
+      border-right: 2px solid rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      transition: filter 0.15s ease, opacity 0.15s ease;
+    }
+
+    .rc-segment:last-child {
+      border-right: 0;
+    }
+
+    .rc-segment:hover {
+      filter: brightness(0.9);
+    }
+
+    .chart-row-wrap.has-root-filter .rc-segment:not(.active) {
+      opacity: 0.3;
+    }
+
+    .rc-segment.active {
+      box-shadow: inset 0 0 0 3px #ffffff;
+    }
+
+    .chart-meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      gap: 5px;
+      color: #64748b;
+      font-size: 11px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .chart-meta strong {
+      color: var(--field-color);
+      font-size: 17px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chart-meta.zero strong {
+      color: #94a3b8;
+    }
+
+    .rc-section {
+      padding: 8px 150px 0 262px;
     }
 
     .rc-tags {
@@ -389,55 +506,64 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 12px;
-      color: #334155;
-      background: #f8fafc;
+      min-width: 0;
+      padding: 4px 7px;
       border: 1px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 2px 9px 2px 6px;
-      white-space: nowrap;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #334155;
+      font: inherit;
+      font-size: 11px;
+      line-height: 1.3;
       cursor: pointer;
       transition: background 0.15s, border-color 0.15s;
-      user-select: none;
     }
 
     .rc-tag:hover {
-      background: #f1f5f9;
       border-color: #94a3b8;
+      background: #f8fafc;
     }
 
     .rc-tag.active {
-      background: var(--primary-soft);
       border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .rc-tag.active .rc-tag-pct {
-      opacity: 1;
+      background: var(--primary-soft);
+      color: #1d4ed8;
     }
 
     .rc-dot {
       width: 8px;
       height: 8px;
-      border-radius: 50%;
+      border-radius: 2px;
       flex: 0 0 auto;
     }
 
+    .rc-tag-label {
+      max-width: 240px;
+      overflow: hidden;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rc-tag b,
+    .rc-tag-pct,
+    .rc-global-pct {
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
     .rc-tag b {
-      font-weight: 700;
       color: #1e293b;
+      font-weight: 750;
     }
 
     .rc-tag-pct {
-      font-weight: 700;
-      margin-left: 1px;
-      opacity: 0.75;
+      color: #475569;
+      font-weight: 650;
     }
 
-    .rc-empty-hint {
-      font-size: 12px;
-      color: #94a3b8;
-      font-style: italic;
+    .rc-global-pct {
+      color: #64748b;
     }
 
     .table-card {
@@ -1216,6 +1342,60 @@
       .topology-shell {
         min-width: 0;
       }
+
+      .chart-panel {
+        padding: 16px;
+      }
+
+      .chart-header {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .chart-total {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .chart-filter-tip {
+        text-align: left;
+      }
+
+      .chart-column-head {
+        display: none;
+      }
+
+      .chart-row-wrap {
+        padding: 12px 6px;
+      }
+
+      .chart-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px 12px;
+      }
+
+      .chart-field-trigger {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .chart-meta {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .chart-track {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+
+      .rc-section {
+        padding: 8px 0 0 37px;
+      }
+
+      .rc-tag-label {
+        max-width: min(240px, 45vw);
+      }
     }
   </style>
 </head>
@@ -1992,29 +2172,33 @@
         "intent", "queryUnstandingRouterType", "webSearch",
         "垂域.md", "网页知识", "运营话术", "知识库", "模型问题"
       ];
-      // Color palette cycling for root causes (non-red, distinct)
-      const RC_COLORS = [
-        "#3b82f6", "#8b5cf6", "#06b6d4", "#f59e0b",
-        "#10b981", "#f97316", "#ec4899", "#6366f1"
+      // Keep each problem item's color family stable while using darker tones for its causes.
+      const FIELD_PALETTES = [
+        { main: "#1d4ed8", causes: ["#1d4ed8", "#0369a1", "#0f766e", "#4338ca"] },
+        { main: "#6d28d9", causes: ["#6d28d9", "#4338ca", "#7e22ce", "#1d4ed8"] },
+        { main: "#0f766e", causes: ["#0f766e", "#047857", "#0369a1", "#166534"] },
+        { main: "#b45309", causes: ["#b45309", "#c2410c", "#a16207", "#9a3412"] },
+        { main: "#be123c", causes: ["#be123c", "#9f1239", "#a21caf", "#7e22ce"] },
+        { main: "#047857", causes: ["#047857", "#15803d", "#3f6212", "#166534"] },
+        { main: "#c2410c", causes: ["#c2410c", "#b45309", "#be123c", "#9a3412"] },
+        { main: "#4338ca", causes: ["#4338ca", "#6d28d9", "#1d4ed8", "#3730a3"] }
       ];
 
       const chartData = WRONG_FIELDS
         .filter(field => state.headers.includes(field))
-        .map(field => {
-          // Compute display data once per row to avoid duplicate parsing
+        .map((field, fieldIndex) => {
+          const fieldPalette = FIELD_PALETTES[fieldIndex % FIELD_PALETTES.length];
           const fieldDataCache = rows.map(row => fieldDisplayData(row, field));
           const wrongRows = fieldDataCache.filter(d => d.isWrong);
           const wrongCount = wrongRows.length;
-          const pct = total > 0 ? (wrongCount / total * 100).toFixed(1) : "0.0";
+          const rowPct = total > 0 ? (wrongCount / total * 100).toFixed(1) : "0.0";
 
-          // Group wrong rows by root_cause
           const rcMap = new Map();
           wrongRows.forEach(d => {
             const rc = d.rootCause && d.rootCause.trim() ? d.rootCause.trim() : "";
             rcMap.set(rc, (rcMap.get(rc) || 0) + 1);
           });
 
-          // Separate named causes from unnamed
           const namedCauses = [];
           let unnamedCount = 0;
           rcMap.forEach((count, label) => {
@@ -2024,13 +2208,13 @@
           namedCauses.sort((a, b) => b.count - a.count);
           if (unnamedCount > 0) namedCauses.push({ label: "（未填写）", count: unnamedCount });
 
-          const rootCauses = namedCauses.map((rc, i) => ({
+          const rootCauses = namedCauses.map((rc, causeIndex) => ({
             ...rc,
             pct: wrongCount > 0 ? (rc.count / wrongCount * 100).toFixed(1) : "0.0",
-            color: RC_COLORS[i % RC_COLORS.length]
+            color: fieldPalette.causes[causeIndex % fieldPalette.causes.length]
           }));
 
-          return { field, wrongCount, pct, rootCauses };
+          return { field, wrongCount, rowPct, rootCauses, color: fieldPalette.main };
         })
         .sort((a, b) => b.wrongCount - a.wrongCount);
 
@@ -2039,8 +2223,19 @@
         return;
       }
 
-      const maxCount = Math.max(...chartData.map(d => d.wrongCount), 1);
-      // Total wrong count across all fields (for header summary)
+      const totalWrongItems = chartData.reduce((sum, item) => sum + item.wrongCount, 0);
+      chartData.forEach(item => {
+        item.overallPct = totalWrongItems > 0
+          ? (item.wrongCount / totalWrongItems * 100).toFixed(1)
+          : "0.0";
+        item.rootCauses = item.rootCauses.map(rc => ({
+          ...rc,
+          globalPct: totalWrongItems > 0
+            ? (rc.count / totalWrongItems * 100).toFixed(1)
+            : "0.0"
+        }));
+      });
+
       const totalWrongRows = new Set(
         state.rows.flatMap((row, i) =>
           chartData.some(d => fieldDisplayData(row, d.field).isWrong) ? [i] : []
@@ -2050,60 +2245,79 @@
       els.statsArea.innerHTML = `
         <div class="chart-panel">
           <div class="chart-header">
-            <strong>错误根因分布统计</strong>
-            <span class="chart-total">
-              总行数：${total}
-              　<span style="color:#ef4444;font-weight:700;">${totalWrongRows}</span> 行含错误
-              （<span style="color:#ef4444;font-weight:700;">${total > 0 ? (totalWrongRows / total * 100).toFixed(1) : "0.0"}%</span>）
-              ${state.isWrongFilter ? `　<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} is_wrong · 点击同行可取消</span>` : ""}
-              ${state.rootCauseFilter ? `　<span class="chart-filter-tip">根因筛选：${escapeHtml(state.rootCauseFilter.field)} / ${escapeHtml(state.rootCauseFilter.rootCause || "（未填写）")} · 点击同标签可取消</span>` : ""}
-            </span>
+            <div class="chart-heading">
+              <strong>错误根因分布统计</strong>
+              <span class="chart-caption">全局构成：问题项占比 → 子根因构成</span>
+            </div>
+            <div class="chart-total">
+              <span class="chart-summary-item">总行数 <b>${total}</b></span>
+              <span class="chart-summary-item alert">含错误行 <b>${totalWrongRows}</b><span>（${total > 0 ? (totalWrongRows / total * 100).toFixed(1) : "0.0"}%）</span></span>
+              <span class="chart-summary-item">错误项 <b>${totalWrongItems}</b></span>
+              ${state.isWrongFilter ? `<span class="chart-filter-tip">筛选中：${escapeHtml(state.isWrongFilter)} is_wrong · 点击同行可取消</span>` : ""}
+              ${state.rootCauseFilter ? `<span class="chart-filter-tip">根因筛选：${escapeHtml(state.rootCauseFilter.field)} / ${escapeHtml(state.rootCauseFilter.rootCause || "（未填写）")} · 点击同标签或色块可取消</span>` : ""}
+            </div>
+          </div>
+          <div class="chart-column-head" aria-hidden="true">
+            <span>问题项</span>
+            <span>子根因构成（条长表示全局占比）</span>
+            <span>占全部错误项</span>
           </div>
           <div class="chart-body">
-            ${chartData.map(d => {
-              const barWidth = d.wrongCount > 0 ? (d.wrongCount / maxCount * 100).toFixed(1) : 0;
+            ${chartData.map((d, index) => {
               const isZero = d.wrongCount === 0;
               const isActive = state.isWrongFilter === d.field;
-              const hasRcData = d.rootCauses.some(rc => rc.label !== "（未填写）");
+              const isRootActive = state.rootCauseFilter && state.rootCauseFilter.field === d.field;
+              const rowIsActive = isActive || isRootActive;
 
-              // Stacked bar segments for root causes
               const stackedSegments = d.wrongCount > 0
-                ? d.rootCauses.map(rc =>
-                    `<div class="rc-segment" style="width:${rc.pct}%;background:${rc.color};" title="${escapeHtml(rc.label)}：${rc.count} 条（${rc.pct}%）"></div>`
-                  ).join("")
+                ? d.rootCauses.map(rc => {
+                    const rcKey = rc.label === "（未填写）" ? "" : rc.label;
+                    const isRcActive = state.rootCauseFilter &&
+                      state.rootCauseFilter.field === d.field &&
+                      state.rootCauseFilter.rootCause === rcKey;
+                    const label = `${d.field} / ${rc.label}：${rc.count} 个错误项；类内 ${rc.pct}%；全局 ${rc.globalPct}%`;
+                    return `<button type="button" class="rc-segment rc-filter${isRcActive ? " active" : ""}" style="width:${rc.pct}%;background:${rc.color};" data-field="${escapeHtml(d.field)}" data-rc="${escapeHtml(rcKey)}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"></button>`;
+                  }).join("")
                 : "";
 
-              // Pill tags for root causes (with data attrs for click-filter)
               const rcTags = d.wrongCount > 0
-                ? (hasRcData
-                    ? d.rootCauses.map(rc => {
-                        const rcKey = rc.label === "（未填写）" ? "" : rc.label;
-                        const isRcActive = state.rootCauseFilter &&
-                          state.rootCauseFilter.field === d.field &&
-                          state.rootCauseFilter.rootCause === rcKey;
-                        return `<span class="rc-tag${isRcActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" data-rc="${escapeHtml(rcKey)}" title="点击筛选该根因语料">
-                          <span class="rc-dot" style="background:${isRcActive ? "var(--primary)" : rc.color};"></span>
-                          ${escapeHtml(rc.label)}
-                          <b>${rc.count}</b><span class="rc-tag-pct" style="color:${isRcActive ? "var(--primary)" : rc.color};">${rc.pct}%</span>
-                        </span>`;
-                      }).join("")
-                    : `<span class="rc-empty-hint">暂无 root_cause 数据</span>`)
+                ? d.rootCauses.map(rc => {
+                    const rcKey = rc.label === "（未填写）" ? "" : rc.label;
+                    const isRcActive = state.rootCauseFilter &&
+                      state.rootCauseFilter.field === d.field &&
+                      state.rootCauseFilter.rootCause === rcKey;
+                    const label = `${d.field} / ${rc.label}：${rc.count} 个错误项；类内 ${rc.pct}%；全局 ${rc.globalPct}%`;
+                    return `<button type="button" class="rc-tag rc-filter${isRcActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" data-rc="${escapeHtml(rcKey)}" title="点击筛选：${escapeHtml(label)}" aria-label="点击筛选：${escapeHtml(label)}">
+                      <span class="rc-dot" style="background:${rc.color};"></span>
+                      <span class="rc-tag-label">${escapeHtml(rc.label)}</span>
+                      <b>${rc.count}</b>
+                      <span class="rc-tag-pct">${rc.pct}% 类内</span>
+                      <span class="rc-global-pct">${rc.globalPct}% 全局</span>
+                    </button>`;
+                  }).join("")
                 : "";
 
               return `
-                <div class="chart-row-wrap">
-                  <div class="chart-row${isActive ? " active" : ""}" data-field="${escapeHtml(d.field)}" title="点击筛选该字段 is_wrong 数据">
-                    <div class="chart-label">${escapeHtml(d.field)}</div>
+                <div class="chart-row-wrap${rowIsActive ? " active" : ""}${isRootActive ? " has-root-filter" : ""}" style="--field-color:${d.color};">
+                  <div class="chart-row" data-field="${escapeHtml(d.field)}" title="点击筛选该字段 is_wrong 数据">
+                    <button type="button" class="chart-field-trigger" data-field="${escapeHtml(d.field)}" aria-label="筛选 ${escapeHtml(d.field)} 的错误项">
+                      <span class="chart-rank">${String(index + 1).padStart(2, "0")}</span>
+                      <span class="chart-label-copy">
+                        <span class="chart-label">${escapeHtml(d.field)}</span>
+                        <span class="chart-submeta">${d.wrongCount} 个错误项 · ${total} 行中 ${d.rowPct}% 出错</span>
+                      </span>
+                    </button>
                     <div class="chart-track">
-                      <div class="chart-bar${isZero ? " zero" : ""}" style="width:${barWidth}%"></div>
+                      <div class="chart-composition${isZero ? " zero" : ""}" style="width:${d.overallPct}%" aria-label="${escapeHtml(d.field)} 占全部错误项 ${d.overallPct}%">
+                        ${stackedSegments}
+                      </div>
                     </div>
-                    <div class="chart-meta">
-                      ${d.wrongCount} / ${total}<span class="chart-pct${isZero ? " zero" : ""}">${d.pct}%</span>
+                    <div class="chart-meta${isZero ? " zero" : ""}">
+                      <strong>${d.overallPct}%</strong><span>全局</span>
                     </div>
                   </div>
                   ${d.wrongCount > 0 ? `
                   <div class="rc-section">
-                    <div class="rc-stacked-bar">${stackedSegments}</div>
                     <div class="rc-tags">${rcTags}</div>
                   </div>` : ""}
                 </div>`;
@@ -2115,7 +2329,7 @@
         row.addEventListener("click", () => {
           const field = row.dataset.field;
           state.isWrongFilter = state.isWrongFilter === field ? null : field;
-          state.rootCauseFilter = null; // 点总条时清除根因筛选，两者互斥
+          state.rootCauseFilter = null;
           renderStats();
           renderTable();
           if (state.isWrongFilter) {
@@ -2126,16 +2340,15 @@
         });
       });
 
-      // Root-cause tag click: filter table by field + specific root_cause
-      [...els.statsArea.querySelectorAll(".rc-tag[data-field]")].forEach(tag => {
+      [...els.statsArea.querySelectorAll(".rc-filter[data-field]")].forEach(tag => {
         tag.addEventListener("click", event => {
-          event.stopPropagation(); // don't bubble to parent .chart-row
+          event.stopPropagation();
           const field = tag.dataset.field;
-          const rc = tag.dataset.rc; // "" for 未填写, else the cause string
+          const rc = tag.dataset.rc;
           const isSame = state.rootCauseFilter &&
             state.rootCauseFilter.field === field &&
             state.rootCauseFilter.rootCause === rc;
-          state.isWrongFilter = null; // 点根因tag时清除总条筛选，两者互斥
+          state.isWrongFilter = null;
           state.rootCauseFilter = isSame ? null : { field, rootCause: rc };
           renderStats();
           renderTable();
